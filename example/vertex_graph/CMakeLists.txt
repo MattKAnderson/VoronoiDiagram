@@ -1,0 +1,3 @@
+add_executable(vertex_graph_example vertex_graph_example.cpp)
+target_link_libraries(vertex_graph_example VoronoiDiagram example_file_output)
+target_include_directories(vertex_graph_example PUBLIC ${PROJECT_SOURCE_DIR})
