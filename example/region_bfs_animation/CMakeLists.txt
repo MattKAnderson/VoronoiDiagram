@@ -1,0 +1,3 @@
+add_executable(region_bfs_animation region_bfs_animation.cpp)
+target_link_libraries(region_bfs_animation VoronoiDiagram example_file_output)
+target_include_directories(region_bfs_animation PUBLIC ${PROJECT_SOURCE_DIR})
