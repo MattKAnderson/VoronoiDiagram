@@ -119,4 +119,23 @@ double parabolae_y_intercept(
         return std::max(roots[0], roots[1]);
     }
 }
+
+RealCoordinate polygon_centroid(std::vector<RealCoordinate>& vertices) {
+    double x = 0.0;
+    double y = 0.0;
+    double area = 0.0;
+    RealCoordinate last_v = vertices.back();
+    for (int i = 0; i < vertices.size(); i++) {
+        const RealCoordinate& v = vertices[i];
+        double signed_area = (last_v.x * v.y) - (v.x * last_v.y);
+        area += signed_area;
+        x += (v.x + last_v.x) * signed_area;
+        y += (v.y + last_v.y) * signed_area;
+        last_v = v;
+    }
+    area *= 3;
+    x /= area;
+    y /= area;
+    return {x, y};
+}
 } // namespace VoronoiDiagram::Impl

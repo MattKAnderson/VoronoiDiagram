@@ -21,22 +21,7 @@ std::vector<RegionNode*> RegionGraph::get_regions() {
 }
 
 RealCoordinate RegionNode::centroid() {
-    double x = 0.0;
-    double y = 0.0;
-    double area = 0.0;
-    RealCoordinate last_v = vertices.back();
-    for (int i = 0; i < vertices.size(); i++) {
-        const RealCoordinate& v = vertices[i];
-        double signed_area = (last_v.x * v.y) - (v.x * last_v.y);
-        area += signed_area;
-        x += (v.x + last_v.x) * signed_area;
-        y += (v.y + last_v.y) * signed_area;
-        last_v = v;
-    }
-    area *= 3;
-    x /= area;
-    y /= area;
-    return {x, y};
+    return Impl::polygon_centroid(vertices);
 }
 
 double RegionNode::area() {
@@ -649,6 +634,10 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
         seeds.emplace_back(x, y);
     }
     return seeds;
+}
+
+std::vector<RealCoordinate> Calculator::region_centroids(){
+
 }
     
 }

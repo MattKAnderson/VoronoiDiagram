@@ -21,4 +21,6 @@ RealCoordinate parabola_intercept(
 double parabolae_y_intercept(
     double directrix, const RealCoordinate& focus1, const RealCoordinate& focus2
 );
+
+RealCoordinate polygon_centroid(std::vector<RealCoordinate>& vertices);
 } // namespace VoronoiDiagram::Impl
