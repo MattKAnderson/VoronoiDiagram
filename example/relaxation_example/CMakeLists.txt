@@ -1,0 +1,3 @@
+add_executable(relaxation_example relaxation_example.cpp)
+target_link_libraries(relaxation_example VoronoiDiagram example_file_output)
+target_include_directories(relaxation_example PUBLIC ${PROJECT_SOURCE_DIR})
