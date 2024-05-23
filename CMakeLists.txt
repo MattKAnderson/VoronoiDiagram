@@ -6,6 +6,7 @@ project("VoronoiDiagram" VERSION 0.1.0
 
 add_subdirectory(VoronoiDiagram)
 add_subdirectory(example)
+add_subdirectory(test)
 
 install(
   TARGETS VoronoiDiagram 
