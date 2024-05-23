@@ -60,6 +60,15 @@ void Calculator::generate(
     crop(box);
 }
 
+void Calculator::relax(const Bbox& bounds) {
+    std::vector<RealCoordinate> new_seeds = region_centroids();
+    // does full re-initialization for now. Obvious optimization is only 
+    // to de-allocate and re-allocate memory that needs to be
+    compute(new_seeds);
+    crop(bounds);
+}
+
+
 std::vector<RealCoordinate> Calculator::get_seeds() {
     return seeds;
 }
@@ -636,8 +645,22 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
     return seeds;
 }
 
-std::vector<RealCoordinate> Calculator::region_centroids(){
-
+std::vector<RealCoordinate> Calculator::region_centroids() {
+    using namespace Impl;
+    std::vector<RealCoordinate> centroids; centroids.reserve(regions.size());
+    std::vector<RealCoordinate> region_vertices; region_vertices.reserve(8);
+    for (Region* region : regions) {
+        HalfEdge* edge = region->an_edge;
+        region_vertices.push_back(vertices[edge->origin_id]->coord);
+        while (edge->next != region->an_edge) {
+            edge = edge->next;
+            region_vertices.push_back(vertices[edge->origin_id]->coord);
+        }
+        centroids.push_back(polygon_centroid(region_vertices));
+        // clear de-allocates, if optimizing, create a manager class
+        region_vertices.clear(); region_vertices.reserve(8);
+    }
+    return centroids;
 }
     
 }

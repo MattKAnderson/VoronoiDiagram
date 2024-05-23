@@ -61,6 +61,7 @@ public:
     void generate(int nseeds, const Bbox& box);
     void generate(std::vector<RealCoordinate>& seeds);
     void generate(std::vector<RealCoordinate>& seeds, const Bbox& box);
+    void relax(const Bbox& bounds);
     std::vector<RealCoordinate> get_seeds();
     VertexGraph get_vertex_graph();
     RegionGraph get_region_graph();
@@ -101,6 +102,7 @@ private:
     );
     RealCoordinate clip_infinite_edge(Impl::HalfEdge*, const Bbox& box);
     std::vector<RealCoordinate> generate_seeds(int nseeds, const Bbox& box);
+    std::vector<RealCoordinate> region_centroids();
 };
 
 inline VertexNode::VertexNode() { 
