@@ -17,7 +17,7 @@ def plot_line_segments(ax, lines, color=None):
             ax.plot(xs, ys)
 
 
-base_dir = "build/example/"
+base_dir = "build/example/vertex_graph/"
 f1 = open(base_dir + "vertex_line_segments.json")
 line_segments = json.load(f1)["vector"]
 
