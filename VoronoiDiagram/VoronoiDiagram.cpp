@@ -475,9 +475,20 @@ void Calculator::crop(const Bbox& bounds) {
     for (Region* region : regions) {
         HalfEdge* edge = region->an_edge->next;
         while (edge != region->an_edge) {
-            if (interior_of_bbox(vertices[edge->origin_id]->coord, bounds)) {
-                cropped_regions.push_back(region);  
+            const RealCoordinate& v = vertices[edge->origin_id]->coord;
+            if (interior_of_bbox(v, bounds)) {
+                cropped_regions.push_back(region);
                 break;             
+            }
+            else if (on_bbox_bounds(v, bounds)) {
+                const RealCoordinate& twin_v = vertices[edge->twin->origin_id]->coord;
+                RealCoordinate midpoint = {
+                    0.5 * (v.x + twin_v.x), 0.5 * (v.y + twin_v.y)
+                };
+                if (interior_of_bbox(midpoint, bounds)) {
+                    cropped_regions.push_back(region);
+                    break;
+                }
             }
             edge = edge->next;
         }
