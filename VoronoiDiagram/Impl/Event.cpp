@@ -156,4 +156,26 @@ void EventQueue::print_ordered_x() {
         if (rc_id < event_id_heap.size()) { index_queue.push(rc_id); }
     }
 }
+
+bool EventQueue::validate() {
+    if (event_id_heap.size() == 0) { return true; }
+    int size = event_id_heap.size();
+    std::vector<int> node_stack;
+    node_stack.push_back(0);
+    while (!node_stack.empty()) {
+        int cur_id = node_stack.back(); node_stack.pop_back();
+        int lc_id = lchild(cur_id);
+        int rc_id = rchild(cur_id);
+        if (lc_id < size) {
+            if (compare(cur_id, lc_id)) { return false; }
+            node_stack.push_back(lc_id);
+        }
+        if (rc_id < size) {
+            if (compare(cur_id, rc_id)) { return false; }
+            node_stack.push_back(rc_id);
+        }
+    }
+    return true;
+}
+
 } // namespace VoronoiDiagram::Impl

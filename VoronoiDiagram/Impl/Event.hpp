@@ -41,6 +41,7 @@ public:
     void print_ordered_x();
     int consume_next();
     bool empty();
+    bool validate();
 private:
     EventManager* em = nullptr;
     std::vector<int> event_id_heap;
