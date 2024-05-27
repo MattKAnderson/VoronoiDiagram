@@ -99,5 +99,6 @@ inline void BeachLine::reset() {
     head = nullptr;
     pool_index = 0;
     next_arc_index = 0;
+    available_arcs = {};
 }
 } // namespace VoronoiDiagram::Impl
