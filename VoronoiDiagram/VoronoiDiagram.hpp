@@ -46,6 +46,14 @@ class RegionGraph {
 public: 
     RegionGraph(RegionNode* graph, std::vector<RegionNode*>& refs);
     ~RegionGraph();
+    RegionGraph& operator=(RegionGraph&& other) { 
+        if (this == &other) { return *this; } 
+        data = other.data; 
+        refs = other.refs; 
+        other.data = nullptr; 
+        other.refs = {}; 
+        return *this;
+    }
     RegionNode* get_head();
     std::vector<RegionNode*> get_regions();
 private:
@@ -92,7 +100,7 @@ private:
     VertexNode* new_interior_vertex(const RealCoordinate& c);
     void initialize();
     void compute(std::vector<RealCoordinate>& seeds);
-    void site_event(const RealCoordinate& site);
+    void site_event(RealCoordinate site);
     void intersection_event(const Impl::Event& event);
     void bound();
     void crop(const Bbox& box);
