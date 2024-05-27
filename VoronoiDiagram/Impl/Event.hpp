@@ -40,6 +40,7 @@ public:
     void reserve_space(int nevents);
     void print_ordered_x();
     int consume_next();
+    int size();
     bool empty();
     bool validate();
 private:
