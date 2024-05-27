@@ -5,7 +5,7 @@ namespace VoronoiDiagram::Impl {
 double euclidean_distance(const RealCoordinate& c1, const RealCoordinate& c2) {
     double dx = c1.x - c2.x;
     double dy = c1.y - c2.y;
-    return std::sqrt(dx * dx + dy*dy);
+    return std::sqrt(dx * dx + dy * dy);
 }
     
 RealCoordinate triangle_circumcenter(
