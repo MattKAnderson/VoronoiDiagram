@@ -58,9 +58,9 @@ void EventQueue::insert(int event_id) {
 void EventQueue::remove(int event_id) {
     int heap_id = id_to_location[event_id];
     if (heap_id == -1) { return; } 
-    id_to_location[event_id] = -1;
     event_id_heap[heap_id] = event_id_heap.back();
     id_to_location[event_id_heap.back()] = heap_id;
+    id_to_location[event_id] = -1;
     event_id_heap.pop_back();
     if (compare_event_id(event_id, event_id_heap[heap_id])) {
         up_heapify(heap_id);
@@ -79,6 +79,10 @@ int EventQueue::consume_next() {
     return event_id;
 }
 
+int EventQueue::size() {
+    return event_id_heap.size();
+}
+
 bool EventQueue::empty() {
     return event_id_heap.size() == 0;
 }
@@ -92,7 +96,7 @@ int EventQueue::rchild(int id) {
 }
 
 int EventQueue::parent(int id) {
-    return (id - 1 - (id & 1 ^ 1)) >> 1;
+    return (id - 1) / 2;
 }
 
 void EventQueue::up_heapify(int id) {
@@ -141,7 +145,7 @@ bool EventQueue::compare(int ida, int idb) {
 bool EventQueue::compare_event_id(int event_ida, int event_idb) {
     const RealCoordinate& ca = em->get(event_ida).coord;
     const RealCoordinate& cb = em->get(event_idb).coord;
-    return ca.x > cb.x || (ca.x == cb.x && ca.y > cb.y);
+    return ca.x > cb.x || (ca.x == cb.x && ca.y < cb.y);
 }
 
 void EventQueue::print_ordered_x() {
