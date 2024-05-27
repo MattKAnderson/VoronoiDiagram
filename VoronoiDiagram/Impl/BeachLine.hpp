@@ -24,7 +24,7 @@ class BeachLine {
 public:
     BeachLine();
     BeachLine(const BeachLine& other) = delete;
-    BeachLine& operator=(const BeachLine& other);
+    BeachLine& operator=(const BeachLine& other) = delete;
     ~BeachLine();
     Arc* new_arc(const RealCoordinate& r1, Region* region);
     Arc* find_intersected_arc(const RealCoordinate& c);
@@ -35,12 +35,14 @@ public:
     void insert_arc_below(Arc* arc, Arc* new_arc);
     void remove_arc(Arc* arc);
     void reserve(int n);
+    void reset();
 
 private:
     const static int POOL_ALLOC_SIZE = 512; 
     Arc* head = nullptr;
     std::vector<Arc*> arc_pools;
-    int next_index = 0;
+    int pool_index = 0;
+    int next_arc_index = 0;
     std::vector<Arc*> available_arcs;
     //std::vector<Arc*> closed_regions;
     void insert_balance(Arc* arc);
@@ -73,26 +75,29 @@ inline Arc* BeachLine::new_arc(const RealCoordinate& focus, Region* region) {
         *arc = Arc(focus, region);
     }
     else {
-        if (next_index < POOL_ALLOC_SIZE) {
-            arc = &arc_pools.back()[next_index++];
+        if (next_arc_index < POOL_ALLOC_SIZE) { 
+            arc = &arc_pools[pool_index][next_arc_index++];
         }
         else {
-            arc_pools.push_back(new Arc[POOL_ALLOC_SIZE]);
-            next_index = 1;
-            arc = &arc_pools.back()[0]; // can remove this subscript right
+            if (pool_index == arc_pools.size() - 1) {
+                arc_pools.push_back(new Arc[POOL_ALLOC_SIZE]);
+            }
+            ++pool_index;                
+            next_arc_index = 1;
+            arc = &arc_pools[pool_index][0];
         }
-        arc->focus = focus;
-        arc->region = region;
+        *arc = Arc(focus, region);
     }
     return arc;
 }
 
-inline BeachLine& BeachLine::operator=(const BeachLine& other) {
-    //head = new Arc(other.head->focus, other.head->region);
-    return *this; // this is hacky, TODO: change
-}
-
 inline Arc* BeachLine::get_head() {
     return head;
+}
+
+inline void BeachLine::reset() {
+    head = nullptr;
+    pool_index = 0;
+    next_arc_index = 0;
 }
 } // namespace VoronoiDiagram::Impl
