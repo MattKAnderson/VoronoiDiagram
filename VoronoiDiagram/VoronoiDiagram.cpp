@@ -146,7 +146,7 @@ void Calculator::initialize() {
     internal_vertices = new VertexNode[2 * nregions - 5];
     vertices = {};
     vertices.reserve(3 * nregions - 6);
-    beach_line = Impl::BeachLine();
+    beach_line.reset();
     event_manager = Impl::EventManager();
     event_queue = Impl::EventQueue();
     event_queue.set_event_manager(&event_manager);
@@ -169,7 +169,7 @@ void Calculator::compute(std::vector<RealCoordinate>& seeds) {
     const RealCoordinate& s1 = event_manager.get(event_id).coord;
     beach_line.set_head(beach_line.new_arc(s1, new_region(s1)));
     event_manager.remove(event_id);
-    
+
     while (!event_queue.empty()) {
         event_id = event_queue.consume_next();
         const Impl::Event& event = event_manager.get(event_id);
@@ -183,7 +183,7 @@ void Calculator::compute(std::vector<RealCoordinate>& seeds) {
     }
 }
     
-void Calculator::site_event(const RealCoordinate& site) {
+void Calculator::site_event(RealCoordinate site) {
     using namespace Impl;
     Arc* arc = beach_line.find_intersected_arc(site);
     Arc* new_arc = beach_line.new_arc(site, new_region(site)); 
@@ -218,6 +218,7 @@ void Calculator::site_event(const RealCoordinate& site) {
             );
             if (split_arc->event_id != -1) {
                 event_queue.remove(split_arc->event_id);
+                event_manager.remove(split_arc->event_id);
             }
             split_arc->event_id = event_id;
             event_queue.insert(event_id);
@@ -234,6 +235,7 @@ void Calculator::site_event(const RealCoordinate& site) {
             );
             if (arc->event_id != -1) {
                 event_queue.remove(arc->event_id);
+                event_manager.remove(arc->event_id);
             }
             arc->event_id = event_id;
             event_queue.insert(event_id);
@@ -243,11 +245,11 @@ void Calculator::site_event(const RealCoordinate& site) {
     
 void Calculator::intersection_event(const Impl::Event& event) {
     using namespace Impl;
-    const RealCoordinate& intersect = event.intersect_point;
+    RealCoordinate intersect = event.intersect_point;
+    double event_x = event.coord.x;
     Arc* arc = event.associated_arc;
     Arc* u_arc = arc->upper;
     Arc* l_arc = arc->lower;
-     
     vertices.push_back(new_interior_vertex(intersect));
 
     arc->upper_edge->origin_id = vertices.size() - 1;
@@ -275,15 +277,12 @@ void Calculator::intersection_event(const Impl::Event& event) {
     const RealCoordinate& fl = l_arc->focus;
     Arc* uu_arc = u_arc->upper;
     Arc* ll_arc = l_arc->lower;
-    if (uu_arc && fl != uu_arc->focus) {
+    if (uu_arc && fl != uu_arc->focus && arc->focus != uu_arc->focus) {
         const RealCoordinate& fuu = uu_arc->focus;
         RealCoordinate new_intersect = triangle_circumcenter(fl, fu, fuu);
         double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fu);
-        if (new_intersect != intersect 
-            && event.coord.x < known_at_x 
-            && (fu.y - fl.y) * (new_intersect.x - intersect.x) >= 0.0
-        ) {
-            RealCoordinate u_edge = parabola_intercept(event.coord.x, fuu, fu);
+        if ((fu.y - fl.y) * (new_intersect.x - intersect.x) >= 0.0) {
+            RealCoordinate u_edge = parabola_intercept(event_x, fuu, fu);
             if ((fuu.y - fu.y) * (new_intersect.x - u_edge.x) >= 0.0) {
                 int event_id = event_manager.create(
                     {known_at_x, new_intersect.y}, new_intersect, u_arc
@@ -297,15 +296,12 @@ void Calculator::intersection_event(const Impl::Event& event) {
         }
 
     }
-    if (ll_arc && u_arc->focus != ll_arc->focus) {
+    if (ll_arc && u_arc->focus != ll_arc->focus && arc->focus != ll_arc->focus) {
         const RealCoordinate& fll = ll_arc->focus;
         RealCoordinate new_intersect = triangle_circumcenter(fu, fl, fll);
         double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fl);
-        if (new_intersect != intersect
-            && event.coord.x < known_at_x
-            && (fu.y - fl.y) * (new_intersect.x  - intersect.x) >= 0.0
-        ) {
-            RealCoordinate l_edge = parabola_intercept(event.coord.x, fl, fll);
+        if ((fu.y - fl.y) * (new_intersect.x  - intersect.x) >= 0.0) {
+            RealCoordinate l_edge = parabola_intercept(event_x, fl, fll);
             if ((fl.y - fll.y) * (new_intersect.x - l_edge.x) >= 0.0) {
                 int event_id = event_manager.create(
                     {known_at_x, new_intersect.y}, new_intersect, l_arc
