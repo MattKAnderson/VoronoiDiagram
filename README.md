@@ -121,5 +121,4 @@ The following performance metrics were recorded on a machine with an Intel i5-13
 TODO: produce graph and compare with other implementations, e.g. boost
 
 # Known Issues
-- Stability of relaxation algorithm for high number of seeds
 - Numerical stability issues when number of seeds is high and Bbox is very small
