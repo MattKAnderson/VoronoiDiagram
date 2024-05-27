@@ -88,35 +88,35 @@ The following performance metrics were recorded on a machine with an Intel i5-13
 | 100 | 0.130 |
 | 1000 | 1.221 |
 | 10000 | 13.210 | 
-| 100000 | 157.524 |
-| 500000 | 909.726 |
+| 100000 | 147.897 |
+| 500000 | 895.279 |
 
 ### Time to generate and relax 5 times
 | Number of sites (regions) | Average of 10 runs (ms) |
 | - | - |
 | 100 | 0.739 |
 | 1000 | 7.040 |
-| 10000 | 77.223 |
-| 100000 | died |
-| 500000 | died |
+| 10000 | 75.787 |
+| 100000 | 854.528 |
+| 500000 | 4675.76 |
 
 ### Time to get VertexGraph
 | Number of sites (regions) | Average of 5 runs (ms) |
 | - | - |
 | 100 | 0.007 |
 | 1000 | 0.081 |
-| 10000 | 0.848 |
-| 100000 | 8.885 |
-| 500000 | 46.256 |
+| 10000 | 0.794 |
+| 100000 | 8.168 |
+| 500000 | 43.3628 |
 
 ### Time to get RegionGraph
 | Number of sites (regions) | Average of 5 runs (ms) |
 | - | - |
 | 100 | 0.013 |
 | 1000 | 0.207 |
-| 10000 | 2.114 |
-| 100000 | 25.238 |
-| 500000 | 123.517 |
+| 10000 | 1.920 |
+| 100000 | 22.272 |
+| 500000 | 120.373 |
 
 TODO: produce graph and compare with other implementations, e.g. boost
 
