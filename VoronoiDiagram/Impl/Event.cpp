@@ -108,20 +108,19 @@ void EventQueue::up_heapify(int id) {
 }
 
 void EventQueue::down_heapify(int id) {
-    while (id < event_id_heap.size()) {
-        int id_of_lowest = id;
-        int lc_id = lchild(id);
-        int rc_id = rchild(id);
-        int size = event_id_heap.size();
-        if (lc_id < size && compare(id_of_lowest, lc_id)) { id_of_lowest = lc_id; }
-        if (rc_id < size && compare(id_of_lowest, rc_id)) { id_of_lowest = rc_id; }
-        if (id_of_lowest != id) {
-            swap(id_of_lowest, id);
-            id = id_of_lowest;
+    int size = event_id_heap.size();
+    int half_size = size >> 1;
+    while (id < half_size) {
+        int child_id = lchild(id);
+        int other_child_id = rchild(id);
+        if (other_child_id < size && compare(child_id, other_child_id)) { 
+            child_id = other_child_id; 
         }
-        else {
+        if (compare(child_id, id)) {
             break;
         }
+        swap(child_id, id);
+        id = child_id;
     }
 }
 
