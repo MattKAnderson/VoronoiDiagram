@@ -4,13 +4,16 @@
 #include <VoronoiDiagram/Impl/Dcel.hpp>
 
 namespace VoronoiDiagram::Impl {
+
+struct Event;
+
 struct Arc {
     Arc() {}
     Arc(const RealCoordinate& focus, Region* region): focus(focus), region(region) {};
     RealCoordinate focus;
     Region* region = nullptr;
     bool red = true;
-    int event_id = -1;
+    Event* event = nullptr;
     Arc* left = nullptr;
     Arc* right = nullptr;
     Arc* parent = nullptr;
