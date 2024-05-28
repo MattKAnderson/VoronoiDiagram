@@ -85,20 +85,20 @@ The following performance metrics were recorded on a machine with an Intel i5-13
 ### Time to generate 
 | Number of sites (regions) | Average of 10 runs (ms) |
 | - | - |
-| 100 | 0.120 |
-| 1000 | 1.019 |
-| 10000 | 10.785 | 
-| 100000 | 130.586 |
-| 500000 | 855.253 |
+| 100 | 0.076 |
+| 1000 | 0.768 |
+| 10000 | 8.177 | 
+| 100000 | 105.293 |
+| 500000 | 704.502 |
 
 ### Time to generate and relax 5 times
 | Number of sites (regions) | Average of 10 runs (ms) |
 | - | - |
-| 100 | 0.623 |
-| 1000 | 5.713 |
-| 10000 | 63.853 |
-| 100000 | 736.814 |
-| 500000 | 4267.48 |
+| 100 | 0.391 |
+| 1000 | 4.172 |
+| 10000 | 46.754 |
+| 100000 | 576.017 |
+| 500000 | 3430.31 |
 
 ### Time to get VertexGraph
 | Number of sites (regions) | Average of 5 runs (ms) |
