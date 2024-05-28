@@ -429,6 +429,7 @@ void Calculator::crop(const Bbox& bounds) {
             cropped_vertices.push_back(vertex);
         }
     }
+    cropped_half_edges.reserve(6 * cropped_vertices.size());
     for (HalfEdge* edge : half_edges) {
         if (
             edge->origin_id != -1
@@ -444,8 +445,8 @@ void Calculator::crop(const Bbox& bounds) {
     for (HalfEdge* edge : cropped_half_edges) {
         edge->origin_id = vertex_id_map[edge->origin_id];
     }
-    vertices = cropped_vertices;
-    half_edges = cropped_half_edges;
+    vertices = std::move(cropped_vertices);
+    half_edges = std::move(cropped_half_edges);
     for (Region* region : regions) {
         HalfEdge* edge = region->an_edge->next;
         while (edge != region->an_edge) {
@@ -467,7 +468,7 @@ void Calculator::crop(const Bbox& bounds) {
             edge = edge->next;
         }
     }
-    regions = cropped_regions;
+    regions = std::move(cropped_regions);
 }
     
 void Calculator::connect_DCEL_exterior(
