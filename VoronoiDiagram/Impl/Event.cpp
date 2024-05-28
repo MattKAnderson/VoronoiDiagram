@@ -87,15 +87,15 @@ bool EventQueue::empty() {
 }
 
 int EventQueue::lchild(int id) {
-    return 2 * id + 1;
+    return (id << 1) + 1;
 }
 
 int EventQueue::rchild(int id) {
-    return 2 * id + 2;
+    return (id << 1) + 2;
 }
 
 int EventQueue::parent(int id) {
-    return (id - 1) / 2;
+    return (id - 1) >> 1;
 }
 
 void EventQueue::up_heapify(int id) {
@@ -111,8 +111,8 @@ void EventQueue::down_heapify(int id) {
     int size = event_id_heap.size();
     int half_size = size >> 1;
     while (id < half_size) {
-        int child_id = lchild(id);
-        int other_child_id = rchild(id);
+        int child_id = (id << 1) + 1;
+        int other_child_id = child_id + 1;
         if (other_child_id < size && compare(child_id, other_child_id)) { 
             child_id = other_child_id; 
         }
