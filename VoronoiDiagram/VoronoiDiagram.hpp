@@ -79,7 +79,7 @@ private:
     std::mt19937_64 rng;
     //std::vector<std::vector<int>> diagram;
     std::vector<RealCoordinate> seeds;
-    Impl::EventManager event_manager;
+    Impl::EventPool* event_pool = nullptr;
     Impl::EventQueue event_queue;
     Impl::BeachLine beach_line;
     //Impl::Dcel dcel;
@@ -101,7 +101,7 @@ private:
     void initialize();
     void compute(std::vector<RealCoordinate>& seeds);
     void site_event(RealCoordinate site);
-    void intersection_event(const Impl::Event& event);
+    void intersection_event(Impl::Event* event);
     void bound();
     void crop(const Bbox& box);
     void connect_DCEL_exterior(
@@ -114,11 +114,11 @@ private:
 };
 
 inline VertexNode::VertexNode() { 
-    connected.reserve(3); 
+    //connected.reserve(3); 
 }
 
 inline VertexNode::VertexNode(const RealCoordinate& coord): coord(coord) { 
-    connected.reserve(3); 
+    //connected.reserve(3); 
 }
 
 inline bool VertexNode::operator==(const VertexNode& other) const { 
@@ -149,6 +149,7 @@ inline Calculator::~Calculator() {
     for (Impl::HalfEdge* edges : additional_half_edges) {
         delete[] edges;
     }
+    delete event_pool;
 }
 
 inline Impl::Region* Calculator::new_region(const RealCoordinate& site) {
