@@ -276,8 +276,8 @@ void Calculator::intersection_event(const Impl::Event& event) {
     if (uu_arc && fl != uu_arc->focus && arc->focus != uu_arc->focus) {
         const RealCoordinate& fuu = uu_arc->focus;
         RealCoordinate new_intersect = triangle_circumcenter(fl, fu, fuu);
-        double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fu);
         if ((fu.y - fl.y) * (new_intersect.x - intersect.x) >= 0.0) {
+            double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fu);
             RealCoordinate u_edge = parabola_intercept(event_x, fuu, fu);
             if ((fuu.y - fu.y) * (new_intersect.x - u_edge.x) >= 0.0) {
                 int event_id = event_manager.create(known_at_x, new_intersect, u_arc);
@@ -293,8 +293,8 @@ void Calculator::intersection_event(const Impl::Event& event) {
     if (ll_arc && u_arc->focus != ll_arc->focus && arc->focus != ll_arc->focus) {
         const RealCoordinate& fll = ll_arc->focus;
         RealCoordinate new_intersect = triangle_circumcenter(fu, fl, fll);
-        double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fl);
         if ((fu.y - fl.y) * (new_intersect.x  - intersect.x) >= 0.0) {
+            double known_at_x = new_intersect.x + euclidean_distance(new_intersect, fl);
             RealCoordinate l_edge = parabola_intercept(event_x, fl, fll);
             if ((fl.y - fll.y) * (new_intersect.x - l_edge.x) >= 0.0) {
                 int event_id = event_manager.create(known_at_x, new_intersect, l_arc);
@@ -418,7 +418,6 @@ void Calculator::crop(const Bbox& bounds) {
 
     connect_DCEL_exterior(exterior, bounds);
 
-    std::unordered_set<HalfEdge*> seen_edges; seen_edges.reserve(half_edges.size());
     std::vector<HalfEdge*> cropped_half_edges;
     std::vector<VertexNode*> cropped_vertices;
     std::vector<Region*> cropped_regions; 
@@ -431,26 +430,19 @@ void Calculator::crop(const Bbox& bounds) {
         }
     }
     for (HalfEdge* edge : half_edges) {
-        if (seen_edges.find(edge) != seen_edges.end()) { continue; }
-        else if (
+        if (
             edge->origin_id != -1
             && inside_bbox(vertices[edge->origin_id]->coord, bounds)
             && inside_bbox(vertices[edge->twin->origin_id]->coord, bounds)
         ) { 
             cropped_half_edges.push_back(edge);
-            cropped_half_edges.push_back(edge->twin);
-            edge->origin_id = vertex_id_map[edge->origin_id];
-            edge->twin->origin_id = vertex_id_map[edge->twin->origin_id];
-            
             if (edge->region) {
                 edge->region->an_edge = edge;
             }
-            if (edge->twin->region) {
-                edge->region->an_edge = edge;
-            }
         }
-        seen_edges.insert(edge);
-        seen_edges.insert(edge->twin);
+    }
+    for (HalfEdge* edge : cropped_half_edges) {
+        edge->origin_id = vertex_id_map[edge->origin_id];
     }
     vertices = cropped_vertices;
     half_edges = cropped_half_edges;
