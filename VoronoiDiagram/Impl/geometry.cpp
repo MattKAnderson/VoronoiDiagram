@@ -49,6 +49,34 @@ double parabola_x_from_y(double directrix, const RealCoordinate& focus, double y
            + (focus.x + directrix) * 0.5;
 }
 
+/* 
+ Warn: The following methods are designed such that the order the focuses are given
+       matters and determines which of the 2 possible y values to return. Focus 1 
+       is assumed as the upper arc, and Focus 2 as the lower arc
+ */
+double parabola_intercept_base(
+    double xf1, double yf1, double xf2, double yf2, double xd
+) {
+    double a = xf2 - xf1;
+    if (a == 0) {
+        return 0.5 * (yf1 + yf2);
+    }
+    double b = 2.0 * (yf2 * (xf1 - xd) - yf1 * (xf2 - xd));
+    double c = (yf1 * yf1) * (xf2 - xd) - (yf2 * yf2) * (xf1 - xd) 
+             - (xf2 - xf1) * (xf1 - xd) * (xf2 - xd);
+
+    double inner = b * b - 4.0 * a * c;
+    double inv_denominator = 0.5 / a;
+    double root_inner = std::sqrt(inner);
+    double root_1 = (-b + root_inner) * inv_denominator;
+    double root_2 = (-b - root_inner) * inv_denominator;
+    if (xf1 > xf2) {
+        return std::min(root_1, root_2);
+    }
+    else {
+        return std::max(root_1, root_2);
+    }
+}
 
 RealCoordinate parabola_intercept(
     double directrix, const RealCoordinate& focus1, const RealCoordinate& focus2
@@ -65,59 +93,17 @@ RealCoordinate parabola_intercept(
         return {parabola_x_from_y(directrix, focus1, yf2), yf2};
     }
 
-    double y; 
-    double a = xf2 - xf1;
-    if (a == 0) {
-        y = 0.5 * (yf1 + yf2);
-        return {parabola_x_from_y(directrix, focus1, y), y};
-    }
-    double b = 2.0 * (yf2 * (xf1 - xd) - yf1 * (xf2 - xd));
-    double c = (yf1 * yf1) * (xf2 - xd) - (yf2 * yf2) * (xf1 - xd) 
-             - (xf2 - xf1) * (xf1 - xd) * (xf2 - xd);
-
-    std::vector<double> roots = quadratic_roots(a, b, c);
-    if (roots.size() == 1) {
-        y = roots[0];
-    }
-    if (xf1 > xf2) {
-        y = std::min(roots[0], roots[1]);
-    }
-    else {
-        y = std::max(roots[0], roots[1]);
-    }
-    
+    double y = parabola_intercept_base(xf1, yf1, xf2, yf2, xd); 
     return {parabola_x_from_y(directrix, focus1, y), y};
 }
 
-/* 
- Warn: This method is designed such that the order the focuses are given
- matters and determines which of the 2 possible y values to return.
- */
 double parabolae_y_intercept(
     double directrix, const RealCoordinate& focus1, const RealCoordinate& focus2
 ) {
     auto [xf1, yf1] = focus1;
     auto [xf2, yf2] = focus2;
     double xd = directrix;
-
-    double a = xf2 - xf1;
-    if (a == 0) {
-        return 0.5 * (yf1 + yf2);
-    }
-    double b = 2.0 * (yf2 * (xf1 - xd) - yf1 * (xf2 - xd));
-    double c = (yf1 * yf1) * (xf2 - xd) - (yf2 * yf2) * (xf1 - xd) 
-             - (xf2 - xf1) * (xf1 - xd) * (xf2 - xd);
-
-    std::vector<double> roots = quadratic_roots(a, b, c);
-    if (roots.size() == 1) {
-        return roots[0];
-    }
-    if (xf1 > xf2) {
-        return std::min(roots[0], roots[1]);
-    }
-    else {
-        return std::max(roots[0], roots[1]);
-    }
+    return parabola_intercept_base(xf1, yf1, xf2, yf2, xd);
 }
 
 RealCoordinate polygon_centroid(std::vector<RealCoordinate>& vertices) {
