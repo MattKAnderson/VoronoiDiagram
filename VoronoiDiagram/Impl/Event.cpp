@@ -6,36 +6,35 @@ const Event& EventManager::get(int id) {
     return events[id];
 }
 
-int EventManager::create(const RealCoordinate& coord) {
+int EventManager::create(const RealCoordinate& site) {
     int id;
     if (available_stack.size()) {
         id = available_stack.back(); available_stack.pop_back();
-        events[id].coord = coord;
+        events[id].sweepline = site.x;
+        events[id].point = site;
         events[id].associated_arc = nullptr;
-        // intersect_point will contain garbage, it should not be accessed
-        // given that associated_arc is set to nullptr
     }   
     else {
         id = events.size();
-        events.emplace_back(coord);
+        events.emplace_back(site);
     }
     return id;
 }
 
 int EventManager::create(
-    const RealCoordinate& coord, const RealCoordinate& intersect, 
+    double sweepline, const RealCoordinate& intersect, 
     Arc* associated_arc
 ) {
     int id;
     if (available_stack.size()) {
         id = available_stack.back(); available_stack.pop_back();
-        events[id].coord = coord;
+        events[id].sweepline = sweepline;
+        events[id].point = intersect;
         events[id].associated_arc = associated_arc;
-        events[id].intersect_point = intersect;
     }
     else {
         id = events.size();
-        events.emplace_back(coord, intersect, associated_arc);
+        events.emplace_back(sweepline, intersect, associated_arc);
     }
     return id;
 }
@@ -143,9 +142,7 @@ bool EventQueue::compare(int ida, int idb) {
 }
 
 bool EventQueue::compare_event_id(int event_ida, int event_idb) {
-    const RealCoordinate& ca = em->get(event_ida).coord;
-    const RealCoordinate& cb = em->get(event_idb).coord;
-    return ca.x > cb.x || (ca.x == cb.x && ca.y < cb.y);
+    return em->get(event_ida).sweepline > em->get(event_idb).sweepline;
 }
 
 void EventQueue::print_ordered_x() {
@@ -153,7 +150,7 @@ void EventQueue::print_ordered_x() {
     index_queue.push(0);
     while (!index_queue.empty()) {
         int id = index_queue.front(); index_queue.pop();
-        std::cout << em->get(event_id_heap[id]).coord.x << "\n";
+        std::cout << em->get(event_id_heap[id]).sweepline << "\n";
         int lc_id = lchild(id);
         int rc_id = rchild(id);
         if (lc_id < event_id_heap.size()) { index_queue.push(lc_id); }

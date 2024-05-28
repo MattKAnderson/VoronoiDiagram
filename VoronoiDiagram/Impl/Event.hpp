@@ -6,23 +6,23 @@
 
 namespace VoronoiDiagram::Impl {
 struct Event {
-    RealCoordinate coord;
-    RealCoordinate intersect_point;
+    double sweepline;
+    RealCoordinate point;
     Arc* associated_arc = nullptr;
     Event(
-        const RealCoordinate& coord, const RealCoordinate& intersect, 
+        double sweepline, const RealCoordinate& intersect, 
         Arc* associated_arc
     );
-    Event(const RealCoordinate& coord);
+    Event(const RealCoordinate& site);
 };
 
 class EventManager {
 public:
     EventManager() {};
     const Event& get(int id);
-    int create(const RealCoordinate& coord);
+    int create(const RealCoordinate& site);
     int create(
-        const RealCoordinate& coord, const RealCoordinate& intersect, 
+        double sweepline, const RealCoordinate& intersect, 
         Arc* associated_arc
     );
     void remove(int id);
@@ -50,7 +50,6 @@ private:
     int lchild(int id);
     int rchild(int id);
     int parent(int id);
-    void heapify(int id);
     void up_heapify(int id);
     void down_heapify(int id);
     void swap(int ida, int idb);
@@ -58,12 +57,12 @@ private:
     bool compare_event_id(int event_ida, int event_idb);
 };
 
-inline Event::Event(const RealCoordinate& coord): coord(coord) {}
+inline Event::Event(const RealCoordinate& site): 
+    sweepline(site.x), point(site) {}
 
 inline Event::Event(
-    const RealCoordinate& coord, const RealCoordinate& intersect,
+    double sweepline, const RealCoordinate& intersect,
     Arc* associated_arc
-): coord(coord), intersect_point(intersect), 
-   associated_arc(associated_arc) {}
+): sweepline(sweepline), point(intersect), associated_arc(associated_arc) {}
 
 } // namespace VoronoiDiagram::Impl

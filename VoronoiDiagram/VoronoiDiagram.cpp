@@ -166,7 +166,7 @@ void Calculator::compute(std::vector<RealCoordinate>& seeds) {
         event_queue.insert(event_id);
     }
     event_id = event_queue.consume_next();
-    const RealCoordinate& s1 = event_manager.get(event_id).coord;
+    const RealCoordinate& s1 = event_manager.get(event_id).point;
     beach_line.set_head(beach_line.new_arc(s1, new_region(s1)));
     event_manager.remove(event_id);
 
@@ -174,7 +174,7 @@ void Calculator::compute(std::vector<RealCoordinate>& seeds) {
         event_id = event_queue.consume_next();
         const Impl::Event& event = event_manager.get(event_id);
         if (event.associated_arc == nullptr) { 
-            site_event(event.coord);
+            site_event(event.point);
         }
         else {
             intersection_event(event);
@@ -213,9 +213,7 @@ void Calculator::site_event(RealCoordinate site) {
         );
         if (site.y < intersect.y) {
             double dist = euclidean_distance(split_arc->focus, intersect); 
-            int event_id = event_manager.create(
-                {intersect.x + dist, intersect.y}, intersect, split_arc
-            );
+            int event_id = event_manager.create(intersect.x + dist, intersect, split_arc);
             if (split_arc->event_id != -1) {
                 event_queue.remove(split_arc->event_id);
                 event_manager.remove(split_arc->event_id);
@@ -230,9 +228,7 @@ void Calculator::site_event(RealCoordinate site) {
         );
         if (site.y > intersect.y) {
             double dist = euclidean_distance(arc->focus, intersect);
-            int event_id = event_manager.create(
-                {intersect.x + dist, intersect.y}, intersect, arc
-            );
+            int event_id = event_manager.create(intersect.x + dist, intersect, arc);
             if (arc->event_id != -1) {
                 event_queue.remove(arc->event_id);
                 event_manager.remove(arc->event_id);
@@ -245,8 +241,8 @@ void Calculator::site_event(RealCoordinate site) {
     
 void Calculator::intersection_event(const Impl::Event& event) {
     using namespace Impl;
-    RealCoordinate intersect = event.intersect_point;
-    double event_x = event.coord.x;
+    RealCoordinate intersect = event.point;
+    double event_x = event.sweepline;
     Arc* arc = event.associated_arc;
     Arc* u_arc = arc->upper;
     Arc* l_arc = arc->lower;
@@ -284,9 +280,7 @@ void Calculator::intersection_event(const Impl::Event& event) {
         if ((fu.y - fl.y) * (new_intersect.x - intersect.x) >= 0.0) {
             RealCoordinate u_edge = parabola_intercept(event_x, fuu, fu);
             if ((fuu.y - fu.y) * (new_intersect.x - u_edge.x) >= 0.0) {
-                int event_id = event_manager.create(
-                    {known_at_x, new_intersect.y}, new_intersect, u_arc
-                );
+                int event_id = event_manager.create(known_at_x, new_intersect, u_arc);
                 if (u_arc->event_id != -1) {
                     event_queue.remove(u_arc->event_id);
                 }
@@ -303,9 +297,7 @@ void Calculator::intersection_event(const Impl::Event& event) {
         if ((fu.y - fl.y) * (new_intersect.x  - intersect.x) >= 0.0) {
             RealCoordinate l_edge = parabola_intercept(event_x, fl, fll);
             if ((fl.y - fll.y) * (new_intersect.x - l_edge.x) >= 0.0) {
-                int event_id = event_manager.create(
-                    {known_at_x, new_intersect.y}, new_intersect, l_arc
-                );
+                int event_id = event_manager.create(known_at_x, new_intersect, l_arc);
                 if (l_arc->event_id != -1) {
                     event_queue.remove(l_arc->event_id);
                 }
