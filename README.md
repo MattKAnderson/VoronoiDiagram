@@ -118,7 +118,15 @@ The following performance metrics were recorded on a machine with an Intel i5-13
 | 100000 | 22.272 |
 | 500000 | 120.373 |
 
-TODO: produce graph and compare with other implementations, e.g. boost
-
 # Known Issues
 - Numerical stability issues when number of seeds is high and Bbox is very small
+
+# TODO
+
+- produce graph and compare with other implementations, e.g. boost
+- use enahnced numerical precision, e.g. 128 bits, when it is detected it is needed (during if checks where the test values are within 64-bit epsilon)
+    - check this resolves errors due to numerical precision when the sites are extremely densely packed
+- sanitize inputs (ensure no duplicate site points)
+- Write validation test script that asserts the Voronoi diagram properties are held true after producing the diagram (e.g. number of connections each vertice has, that the closest 3 sites are equidistant from vertex in question, no edge crosses another edge, etc).  
+- Write a robustness test script that only tests successful completion for millions of seeds
+- Further micro-optimization / memory management
