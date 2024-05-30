@@ -1,3 +1,3 @@
-add_executable(measure_performance measure_performance.cpp)
-target_link_libraries(measure_performance VoronoiDiagram)
-target_include_directories(measure_performance PUBLIC ${PROJECT_SOURCE_DIR})
+add_subdirectory(common)
+add_subdirectory(jc_voronoi)
+add_subdirectory(VoronoiDiagram)

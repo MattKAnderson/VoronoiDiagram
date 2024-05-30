@@ -1,0 +1,5 @@
+add_executable(time_jc_voronoi time_jc_voronoi.cpp)
+target_link_libraries(time_jc_voronoi PUBLIC test_common)
+target_include_directories(time_jc_voronoi PUBLIC ./ ${PROJECT_SOURCE_DIR})
+target_compile_definitions(time_jc_voronoi PUBLIC JC_VORONOI_IMPLEMENTATION)
+target_compile_options(time_jc_voronoi PRIVATE -mtune=generic -march=native -static)
