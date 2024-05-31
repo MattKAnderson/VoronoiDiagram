@@ -84,7 +84,8 @@ Examples can be found under the `example/` directory. Examples include producing
 The time to generate and clip the voronoi diagram for specified number of pre-generated sites is plotted below for VoronoiDiagram, fastjet, and Boost. Note: Boost does not clip the diagram and the additional time that would take is not captured in the measurements of the Boost implementation
 
 <p align="center">
-  <img src=data/performance_comparison_plot.png alt=performance_comparison_plot, width=600>
+  <img src=data/performance_comparison_plot_0.0_1000.0.png alt=performance_comparison_plot_0_to_1000, width=800> 
+  <img src=data/performance_comparison_plot_1000.0_100000.0.png alt=performance_comparison_plot_1000_to_100000, width=800> 
 </p>
 
 
@@ -103,7 +104,6 @@ The following is a table summarizing the avg. time over 20 runs in milliseconds 
 
 # TODO
 
-- produce graph and compare with other implementations, e.g. boost
 - investigate using a [bucket queue](https://en.wikipedia.org/wiki/Bucket_queue), since it is the PQ consume largest share of runtime
 - use enahnced numerical precision, e.g. 128 bits, when it is detected it is needed (during if checks where the test values are within 64-bit epsilon)
     - check this resolves errors due to numerical precision when the sites are extremely densely packed
