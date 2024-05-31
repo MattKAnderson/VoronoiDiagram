@@ -60,9 +60,9 @@ def plot(data, start, stop, tick_step=None):
 
 def main():
     data = load_measurements()
-    plot(data, 0.0, 2000.0, 200.0)
-    plot(data, 2000.0, 20000.0, 2000.0)
-    plot(data, 100000.0, 200000.0, 10000.0)
+    plot(data, 0.0, 1000.0, 100.0)
+    plot(data, 1000.0, 100000.0, 10000.0)
+    #plot(data, 100000.0, 200000.0, 10000.0)
 
 
 if __name__ == "__main__":
