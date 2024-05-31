@@ -14,7 +14,7 @@ int main() {
 
     int seed = high_resolution_clock::now().time_since_epoch().count();
     int num_samples = 20;
-    int max_psize = 25000;
+    int max_psize = 250000;
     //int relax_count = 5;
     std::string filename = "../../../data/performance_measurements.json";
     std::mt19937_64 rng(seed);
