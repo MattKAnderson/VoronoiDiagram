@@ -124,6 +124,7 @@ The following performance metrics were recorded on a machine with an Intel i5-13
 # TODO
 
 - produce graph and compare with other implementations, e.g. boost
+- investigate using a [bucket queue](https://en.wikipedia.org/wiki/Bucket_queue), since it is the PQ consume largest share of runtime
 - use enahnced numerical precision, e.g. 128 bits, when it is detected it is needed (during if checks where the test values are within 64-bit epsilon)
     - check this resolves errors due to numerical precision when the sites are extremely densely packed
 - sanitize inputs (ensure no duplicate site points)
