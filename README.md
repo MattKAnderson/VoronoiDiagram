@@ -80,46 +80,26 @@ Examples can be found under the `example/` directory. Examples include producing
 </p>
 
 # Performance
-The following performance metrics were recorded on a machine with an Intel i5-13600kf at 5.1 Ghz and 3600 Mhz CL16 DDR4 ram.
+## Comparison
+The time to generate and clip the voronoi diagram for specified number of pre-generated sites is plotted below for VoronoiDiagram, fastjet, and Boost. Note: Boost does not clip the diagram and the additional time that would take is not captured in the measurements of the Boost implementation
 
-### Time to generate 
-| Number of sites (regions) | Average of 10 runs (ms) |
-| - | - |
-| 100 | 0.074 |
-| 1000 | 0.709 |
-| 10000 | 7.355 | 
-| 100000 | 87.229 |
-| 500000 | 530.652 |
+<p align="center">
+  <img src=data/performance_comparison_plot.png alt=performance_comparison_plot, width=600>
+</p>
 
-### Time to generate and relax 5 times
-| Number of sites (regions) | Average of 10 runs (ms) |
-| - | - |
-| 100 | 0.391 |
-| 1000 | 3.901 |
-| 10000 | 42.097 |
-| 100000 | 485.658 |
-| 500000 | 2803.48 |
 
-### Time to get VertexGraph
-| Number of sites (regions) | Average of 5 runs (ms) |
-| - | - |
-| 100 | 0.007 |
-| 1000 | 0.081 |
-| 10000 | 0.794 |
-| 100000 | 8.168 |
-| 500000 | 43.3628 |
+## Operation times
+The following is a table summarizing the avg. time over 20 runs in milliseconds (ms) to complete the 4 core operations for different problem sizes
 
-### Time to get RegionGraph
-| Number of sites (regions) | Average of 5 runs (ms) |
-| - | - |
-| 100 | 0.013 |
-| 1000 | 0.207 |
-| 10000 | 1.920 |
-| 100000 | 22.272 |
-| 500000 | 120.373 |
+| Operation | 100 sites | 1000 sites | 10,000 sites | 100,000 sites |
+| - | - | - | - | - |
+| Generate | 0.074 | 0.709 | 7.355 | 87.229 |
+| Relax 5x | | | | |
+| Get VertexGraph | 0.007 | 0.081 | 0.794 | 8.168 |
+| Get RegionGraph | 0.013 | 0.207 | 1.920 | 22.272 |
 
 # Known Issues
-- Numerical stability issues when number of seeds is high and Bbox is very small
+- Numerical precision issues when number of seeds is high and Bbox is very small
 
 # TODO
 
