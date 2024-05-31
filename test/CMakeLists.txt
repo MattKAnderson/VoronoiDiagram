@@ -1,3 +1,5 @@
 add_subdirectory(common)
 add_subdirectory(jc_voronoi)
+add_subdirectory(fastjet)
+add_subdirectory(boost)
 add_subdirectory(VoronoiDiagram)
