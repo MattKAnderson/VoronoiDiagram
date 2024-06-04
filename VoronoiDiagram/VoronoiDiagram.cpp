@@ -2,29 +2,29 @@
 
 namespace VoronoiDiagram {
 
-VertexNode* VertexGraph::get_head() { 
+VertexGraph::Node* VertexGraph::get_head() { 
     if (refs.size() == 0) { return nullptr; }
     else { return refs[0]; }
 }
 
-std::vector<VertexNode*> VertexGraph::get_vertices() {
+std::vector<VertexGraph::Node*> VertexGraph::get_vertices() {
     return refs;
 }
 
-RegionNode* RegionGraph::get_head() {
+RegionGraph::Node* RegionGraph::get_head() {
     if (refs.size() == 0) { return nullptr; }
     else { return refs[0]; }
 }
 
-std::vector<RegionNode*> RegionGraph::get_regions() {
+std::vector<RegionGraph::Node*> RegionGraph::get_regions() {
     return refs;
 }
 
-RealCoordinate RegionNode::centroid() {
+RealCoordinate RegionGraph::Node::centroid() {
     return Impl::polygon_centroid(vertices);
 }
 
-double RegionNode::area() {
+double RegionGraph::Node::area() {
     double a = 0.0;
     RealCoordinate last_v = vertices.back();
     for (int i = 0; i < vertices.size(); i++) {
@@ -82,11 +82,13 @@ std::vector<RealCoordinate> Calculator::get_seeds() {
 }
 
 VertexGraph Calculator::get_vertex_graph() {
-    std::vector<VertexNode*> vertex_refs; vertex_refs.reserve(vertices.size());
-    VertexNode* new_vertices = new VertexNode[vertices.size()];
+    std::vector<VertexGraph::Node*> vertex_refs; 
+    VertexGraph::Node* new_vertices = new VertexGraph::Node[vertices.size()];
+    vertex_refs.reserve(vertices.size());
     for (int i = 0; i < vertices.size(); i++) {
         vertex_refs.push_back(&new_vertices[i]);
-        new_vertices[i].coord = vertices[i]->coord;
+        new_vertices[i].coord = *vertices[i];
+        new_vertices[i].connected.reserve(4);
     }
     for (Impl::HalfEdge* half_edge : half_edges) {
         if (half_edge->twin->origin_id == -1) {
@@ -94,7 +96,7 @@ VertexGraph Calculator::get_vertex_graph() {
         }
         else if (half_edge->twin->origin_id >= vertices.size()) {
             std::cout << "Caught out of bounds id" << std::endl;
-            RealCoordinate c = vertices[half_edge->origin_id]->coord;
+            RealCoordinate c = *vertices[half_edge->origin_id];
             std::cout << "this coord: " << c.x << ", " << c.y << std::endl;
         }
         else {
@@ -107,10 +109,10 @@ VertexGraph Calculator::get_vertex_graph() {
 }
 
 RegionGraph Calculator::get_region_graph() {
-    std::vector<RegionNode*> nodes; nodes.reserve(nregions);
-    RegionNode* nodes_array = new RegionNode[nregions];
+    std::vector<RegionGraph::Node*> nodes; nodes.reserve(nregions);
+    RegionGraph::Node* nodes_array = new RegionGraph::Node[nregions];
     int next_id = 0;
-    std::unordered_map<Impl::Region*, RegionNode*> node_map;
+    std::unordered_map<Impl::Region*, RegionGraph::Node*> node_map;
     for (int i = 0; i < nregions; i++) {
         nodes_array[i].adjacent.reserve(8);
         nodes_array[i].vertices.reserve(8);
@@ -119,10 +121,10 @@ RegionGraph Calculator::get_region_graph() {
         node_map.insert({regions[i], nodes.back()});
     }
     for (int i = 0; i < nregions; i++) {
-        RegionNode* this_region = node_map[regions[i]];
+        RegionGraph::Node* this_region = node_map[regions[i]];
         Impl::HalfEdge* edge_ptr = regions[i]->an_edge;
         while (edge_ptr->next != regions[i]->an_edge) {
-            this_region->vertices.push_back(vertices[edge_ptr->origin_id]->coord);
+            this_region->vertices.push_back(*vertices[edge_ptr->origin_id]);
             if (edge_ptr->twin->region != nullptr) {
                 this_region->adjacent.push_back(node_map[edge_ptr->twin->region]);
             }
@@ -131,7 +133,7 @@ RegionGraph Calculator::get_region_graph() {
         if (edge_ptr->twin->region != nullptr) {
             this_region->adjacent.push_back(node_map[edge_ptr->twin->region]);
         }
-        this_region->vertices.push_back(vertices[edge_ptr->origin_id]->coord);
+        this_region->vertices.push_back(*vertices[edge_ptr->origin_id]);
     }
     return RegionGraph(nodes_array, nodes);
 }
@@ -165,7 +167,7 @@ void Calculator::initialize() {
     if (internal_vertices != nullptr) {
         delete[] internal_vertices;
     }
-    internal_vertices = new VertexNode[2 * nregions - 5];
+    internal_vertices = new RealCoordinate[2 * nregions - 5];
     vertices = {};
     vertices.reserve(3 * nregions - 6);
     beach_line.reset();
@@ -335,11 +337,11 @@ void Calculator::bound() {
     double ymin = std::numeric_limits<double>::max();
     double xmax = std::numeric_limits<double>::min();
     double ymax = std::numeric_limits<double>::min();
-    for (VertexNode* v : vertices) {
-        xmin = std::min(xmin, v->coord.x);
-        ymin = std::min(ymin, v->coord.y);
-        xmax = std::max(xmax, v->coord.x);
-        ymax = std::max(ymax, v->coord.y);
+    for (RealCoordinate* v : vertices) {
+        xmin = std::min(xmin, v->x);
+        ymin = std::min(ymin, v->y);
+        xmax = std::max(xmax, v->x);
+        ymax = std::max(ymax, v->y);
     }
     Bbox bounds = {xmin, xmax, ymin, ymax};
 
@@ -417,17 +419,17 @@ void Calculator::crop(const Bbox& bounds) {
     std::list<std::pair<RealCoordinate, HalfEdge*>> exterior;
     for (HalfEdge* edge : half_edges) {
         if (edge->origin_id == -1) {
-            const RealCoordinate& twin_c = vertices[edge->twin->origin_id]->coord;
+            const RealCoordinate& twin_c = *vertices[edge->twin->origin_id];
             if (interior_of_bbox(twin_c, bounds)) { 
                 RealCoordinate v = clip_infinite_edge(edge, bounds);
                 exterior.emplace_back(v, edge);
             }
             continue;
         }
-        const RealCoordinate& c = vertices[edge->origin_id]->coord;
+        const RealCoordinate& c = *vertices[edge->origin_id];
         if (outside_bbox(c, bounds)) {
             if (edge->twin->origin_id == -1) { continue; }
-            const RealCoordinate& twin_c = vertices[edge->twin->origin_id]->coord;
+            const RealCoordinate& twin_c = *vertices[edge->twin->origin_id];
             if (!clipper.CohenSutherlandClip(c, twin_c)) { continue; } 
             exterior.emplace_back(clipper.get_clipped_a(), edge);
         }
@@ -440,22 +442,21 @@ void Calculator::crop(const Bbox& bounds) {
     connect_DCEL_exterior(exterior, bounds);
 
     std::vector<HalfEdge*> cropped_half_edges;
-    std::vector<VertexNode*> cropped_vertices;
+    std::vector<RealCoordinate*> cropped_vertices;
     std::vector<Region*> cropped_regions; 
     std::vector<int> vertex_id_map(vertices.size(), -1);
     for (int i = 0; i < vertices.size(); i++) {
-        VertexNode* vertex = vertices[i];
-        if (inside_bbox(vertex->coord, bounds)) {
+        if (inside_bbox(*vertices[i], bounds)) {
             vertex_id_map[i] = cropped_vertices.size();
-            cropped_vertices.push_back(vertex);
+            cropped_vertices.push_back(vertices[i]);
         }
     }
     cropped_half_edges.reserve(6 * cropped_vertices.size());
     for (HalfEdge* edge : half_edges) {
         if (
             edge->origin_id != -1
-            && inside_bbox(vertices[edge->origin_id]->coord, bounds)
-            && inside_bbox(vertices[edge->twin->origin_id]->coord, bounds)
+            && inside_bbox(*vertices[edge->origin_id], bounds)
+            && inside_bbox(*vertices[edge->twin->origin_id], bounds)
         ) { 
             cropped_half_edges.push_back(edge);
             if (edge->region) {
@@ -471,13 +472,13 @@ void Calculator::crop(const Bbox& bounds) {
     for (Region* region : regions) {
         HalfEdge* edge = region->an_edge->next;
         while (edge != region->an_edge) {
-            const RealCoordinate& v = vertices[edge->origin_id]->coord;
+            const RealCoordinate& v = *vertices[edge->origin_id];
             if (interior_of_bbox(v, bounds)) {
                 cropped_regions.push_back(region);
                 break;             
             }
             else if (on_bbox_bounds(v, bounds)) {
-                const RealCoordinate& twin_v = vertices[edge->twin->origin_id]->coord;
+                const RealCoordinate& twin_v = *vertices[edge->twin->origin_id];
                 RealCoordinate midpoint = {
                     0.5 * (v.x + twin_v.x), 0.5 * (v.y + twin_v.y)
                 };
@@ -497,7 +498,7 @@ void Calculator::connect_DCEL_exterior(
     const Bbox& bounds
 ) {
     using namespace Impl;
-    VertexNode* exterior_vertices = new VertexNode[exterior.size() + 4];
+    RealCoordinate* exterior_vertices = new RealCoordinate[exterior.size() + 4];
     HalfEdge* boundary_half_edges = new HalfEdge[exterior.size() * 2 + 8];
     additional_vertices.push_back(exterior_vertices);
     additional_half_edges.push_back(boundary_half_edges);
@@ -535,9 +536,9 @@ void Calculator::connect_DCEL_exterior(
     HalfEdge* first_corner_edge = nullptr;
     int first_origin_id = -1;
     for (auto [vertex, edge_out] : exterior) {
-        VertexNode* vertex_node = &exterior_vertices[next_vertex_id++];
-        vertex_node->coord = vertex;
-        vertices.push_back(vertex_node);
+        RealCoordinate* vertex_coord = &exterior_vertices[next_vertex_id++];
+        *vertex_coord = vertex;
+        vertices.push_back(vertex_coord);
         HalfEdge* new_edge = &boundary_half_edges[next_half_edge_id++];
         HalfEdge* twin_edge = &boundary_half_edges[next_half_edge_id++];
         if (edge_out == nullptr) {
@@ -597,7 +598,7 @@ void Calculator::connect_DCEL_exterior(
 RealCoordinate Calculator::clip_infinite_edge(
     Impl::HalfEdge* edge, const Bbox& bounds
 ) {
-    const auto& [x0, y0] = vertices[edge->twin->origin_id]->coord;
+    const auto& [x0, y0] = *vertices[edge->twin->origin_id];
     const auto& [rx1, ry1] = edge->region->seed;
     const auto& [rx2, ry2] = edge->twin->region->seed;
     double y_int, x_int;
@@ -659,10 +660,10 @@ std::vector<RealCoordinate> Calculator::region_centroids() {
     std::vector<RealCoordinate> region_vertices; region_vertices.reserve(8);
     for (Region* region : regions) {
         HalfEdge* edge = region->an_edge;
-        region_vertices.push_back(vertices[edge->origin_id]->coord);
+        region_vertices.push_back(*vertices[edge->origin_id]);
         while (edge->next != region->an_edge) {
             edge = edge->next;
-            region_vertices.push_back(vertices[edge->origin_id]->coord);
+            region_vertices.push_back(*vertices[edge->origin_id]);
         }
         centroids.push_back(polygon_centroid(region_vertices));
         // clear de-allocates, if optimizing, create a manager class

@@ -3,17 +3,17 @@
 namespace VoronoiDiagram::ExampleIO {
 
 std::vector<std::pair<RealCoordinate, RealCoordinate>> vertex_graph_to_line_segments(
-    std::vector<VertexNode*> graph
+    std::vector<VertexGraph::Node*> graph
 ) {
     std::cout << "Graph size: " << graph.size() << std::endl;
     std::vector<std::pair<RealCoordinate, RealCoordinate>> line_segments;
-    std::unordered_set<VertexNode*> visited;
-    std::vector<VertexNode*> stack;
+    std::unordered_set<VertexGraph::Node*> visited;
+    std::vector<VertexGraph::Node*> stack;
     stack.push_back(graph[0]);
     while (stack.size() != 0) {
-        VertexNode* node = stack.back(); stack.pop_back();
+        VertexGraph::Node* node = stack.back(); stack.pop_back();
         visited.insert(node);
-        for (VertexNode* edge : node->connected) {
+        for (VertexGraph::Node* edge : node->connected) {
             if (visited.find(edge) != visited.end()) {
                 continue;
             }
@@ -32,13 +32,13 @@ std::vector<std::pair<RealCoordinate, RealCoordinate>> region_adjacency_line_seg
     RegionGraph& graph
 ) {
     std::vector<std::pair<RealCoordinate, RealCoordinate>> line_segments;
-    std::unordered_set<RegionNode*> visited;
-    for (RegionNode* region : graph.get_regions()) {
-        for (RegionNode* adj_region : region->adjacent) {
+    std::unordered_set<RegionGraph::Node*> visited;
+    for (RegionGraph::Node& region : graph) {
+        for (RegionGraph::Node* adj_region : region.adjacent) {
             if (visited.find(adj_region) != visited.end()) { continue; }
-            line_segments.emplace_back(region->centroid(), adj_region->centroid());
+            line_segments.emplace_back(region.centroid(), adj_region->centroid());
         }
-        visited.insert(region);
+        visited.insert(&region);
     }
     return line_segments;
 }
@@ -51,7 +51,7 @@ std::string to_json(const std::pair<RealCoordinate, RealCoordinate>& p) {
     return "[" + to_json(p.first) + ", " + to_json(p.second) + "]";
 }
 
-std::string to_json(RegionNode* p) {
+std::string to_json(RegionGraph::Node* p) {
     std::string centroid = to_json(p->centroid());
     std::string vertices_string = "[";
     for (const RealCoordinate& vertex : p->vertices) {

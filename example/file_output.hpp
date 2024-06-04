@@ -11,14 +11,14 @@
 namespace VoronoiDiagram::ExampleIO {
 
 std::vector<std::pair<RealCoordinate, RealCoordinate>> vertex_graph_to_line_segments(
-    std::vector<VertexNode*> graph
+    std::vector<VertexGraph::Node*> graph
 ); 
 std::vector<std::pair<RealCoordinate, RealCoordinate>> region_adjacency_line_segments(
     RegionGraph& graph
 );
 std::string to_json(const RealCoordinate& c);
 std::string to_json(const std::pair<RealCoordinate, RealCoordinate>& p);
-std::string to_json(RegionNode* p);
+std::string to_json(RegionGraph::Node* p);
 template <typename T>
 void vector_output(std::string filename, std::vector<T>& vec) {
     std::ofstream outfile;
