@@ -70,6 +70,7 @@ public:
     void generate(std::vector<RealCoordinate>& seeds);
     void generate(std::vector<RealCoordinate>& seeds, const Bbox& box);
     void relax(const Bbox& bounds);
+    void relax_iters(const Bbox& bounds, int iters);
     std::vector<RealCoordinate> get_seeds();
     VertexGraph get_vertex_graph();
     RegionGraph get_region_graph();

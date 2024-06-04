@@ -70,6 +70,12 @@ void Calculator::relax(const Bbox& bounds) {
     crop(bounds);
 }
 
+void Calculator::relax_iters(const Bbox& bounds, int iters) {
+    for (int i = 0; i < iters; ++i) {
+        relax(bounds);
+    }
+}
+
 
 std::vector<RealCoordinate> Calculator::get_seeds() {
     return seeds;
@@ -639,7 +645,11 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
             seeds.push_back(c);
             already_added.insert(c);
         }
+        else {
+            std::cout << "Avoided duplicate" << std::endl;
+        }
     }
+    std::cout << "Seeds size is: " << seeds.size() << std::endl;
     return seeds;
 }
 
