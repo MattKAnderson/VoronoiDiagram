@@ -49,22 +49,24 @@ void Calculator::generate(int nseeds, const Bbox& box) {
 void Calculator::generate(
     std::vector<RealCoordinate>& seeds
 ) {
-    compute(seeds);
+    this->seeds = filter_duplicate_seeds(seeds);
+    compute();
     bound();
 }
 
 void Calculator::generate(
     std::vector<RealCoordinate>& seeds, const Bbox& box
 ) {
-    compute(seeds);
+    this->seeds = filter_duplicate_seeds(seeds);
+    compute();
     crop(box);
 }
 
 void Calculator::relax(const Bbox& bounds) {
-    std::vector<RealCoordinate> new_seeds = region_centroids();
+    this->seeds = region_centroids();
     // does full re-initialization for now. Obvious optimization is only 
     // to de-allocate and re-allocate memory that needs to be
-    compute(new_seeds);
+    compute();
     crop(bounds);
 }
 
@@ -128,6 +130,20 @@ RegionGraph Calculator::get_region_graph() {
     return RegionGraph(nodes_array, nodes);
 }
 
+std::vector<RealCoordinate> Calculator::filter_duplicate_seeds(
+    std::vector<RealCoordinate>& seeds
+) {
+    std::vector<RealCoordinate> filtered; filtered.reserve(seeds.size());
+    std::unordered_set<RealCoordinate> seen; seen.reserve(seeds.size());
+    for (const RealCoordinate& seed : seeds) {
+        if (seen.find(seed) == seen.end()) { 
+            filtered.push_back(seed);
+            seen.insert(seed);
+        }
+    }
+    return std::move(filtered);
+}
+
 void Calculator::initialize() {
     if (region_data != nullptr) {
         delete[] region_data;
@@ -155,8 +171,7 @@ void Calculator::initialize() {
     next_region_id = 0;
 }
     
-void Calculator::compute(std::vector<RealCoordinate>& seeds) {
-    this->seeds = seeds;
+void Calculator::compute() {
     nregions = seeds.size();
     initialize();
 
@@ -615,13 +630,15 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
     std::uniform_real_distribution<double> random_x(box.xmin, box.xmax);
     std::uniform_real_distribution<double> random_y(box.ymin, box.ymax);
     std::vector<RealCoordinate> seeds;
+    std::unordered_set<RealCoordinate> already_added;
     seeds.reserve(nseeds);
-    for (int i = 0; i < nseeds; i++) {
-        //int x = random_x(rng);
-        //int y = random_y(rng);
-        double x = random_x(rng);
-        double y = random_y(rng);
-        seeds.emplace_back(x, y);
+    already_added.reserve(nseeds);
+    while (seeds.size() < nseeds) {
+        RealCoordinate c(random_x(rng), random_y(rng));
+        if (already_added.find(c) == already_added.end()) {
+            seeds.push_back(c);
+            already_added.insert(c);
+        }
     }
     return seeds;
 }

@@ -98,8 +98,11 @@ private:
     Impl::Region* new_region(const RealCoordinate& c);
     Impl::HalfEdge* new_interior_edge(Impl::Region* region);
     VertexNode* new_interior_vertex(const RealCoordinate& c);
-    void initialize();
-    void compute(std::vector<RealCoordinate>& seeds);
+    std::vector<RealCoordinate> filter_duplicate_seeds(
+        std::vector<RealCoordinate>& seeds
+    );
+    void initialize();    
+    void compute();
     void site_event(RealCoordinate site);
     void intersection_event(const Impl::Event& event);
     void bound();
