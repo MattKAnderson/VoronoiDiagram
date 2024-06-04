@@ -44,7 +44,7 @@ std::vector<std::pair<RealCoordinate, RealCoordinate>> region_adjacency_line_seg
 }
 
 std::string to_json(const RealCoordinate& c) {
-    return "[" + std::to_string(c.x) + ", " + std::to_string(c.y) + "]";
+    return "[" + std::format("{}", c.x) + ", " + std::format("{}", c.y) + "]";
 }
 
 std::string to_json(const std::pair<RealCoordinate, RealCoordinate>& p) {
