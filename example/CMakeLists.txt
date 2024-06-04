@@ -1,6 +1,7 @@
 add_library(example_file_output file_output.cpp)
 target_include_directories(example_file_output PUBLIC ${PROJECT_SOURCE_DIR})
-
+set_property(TARGET example_file_output PROPERTY CXX_STANDARD 20)
+set_property(TARGET example_file_output PROPERTY CXX_STANDARD_REQUIRED ON)
 add_subdirectory(vertex_graph)
 add_subdirectory(dual_graph)
 add_subdirectory(region_bfs_animation)
