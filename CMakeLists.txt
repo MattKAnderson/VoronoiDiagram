@@ -4,6 +4,9 @@ project("VoronoiDiagram" VERSION 0.1.0
                          HOMEPAGE_URL "https://github.com/MattKAnderson/VoronoiDiagram"
                          LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_link_options(-static)
+
 add_subdirectory(VoronoiDiagram)
 add_subdirectory(example)
 add_subdirectory(test)
