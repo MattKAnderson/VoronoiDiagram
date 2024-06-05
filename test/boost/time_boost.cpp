@@ -17,7 +17,7 @@ int main() {
     using namespace boost::polygon;
 
     int seed = high_resolution_clock::now().time_since_epoch().count();
-    int num_samples = 20;
+    int num_samples = 50;
     int max_psize = 250000;
     std::string filename = "../../../data/boost_performance_measurements.json";
     std::mt19937_64 rng(seed);
