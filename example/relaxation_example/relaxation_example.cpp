@@ -9,7 +9,7 @@ int main() {
     using namespace VoronoiDiagram;
     using namespace VoronoiDiagram::ExampleIO;
     typedef std::vector<std::pair<RealCoordinate, RealCoordinate>> ls_vector;
-    int seed = 918;
+    int seed = 90091;
     int nsites = 1000;
     Bbox bounds{-512.0, 512.0, -512.0, 512.0};
     VoronoiDiagram::Calculator calculator(seed); 
@@ -20,6 +20,7 @@ int main() {
     VertexGraph vgraph = calculator.get_vertex_graph();
     vertex_line_segments.push_back(vertex_graph_to_line_segments(vgraph.get_vertices()));
     for (int i = 0; i < 25; i++) {
+        std::cout << "Starting relax iter: " << i << std::endl;
         calculator.relax(bounds);
         VertexGraph vgraph = calculator.get_vertex_graph();
         vertex_line_segments.push_back(vertex_graph_to_line_segments(vgraph.get_vertices()));
@@ -30,4 +31,5 @@ int main() {
         std::string filename = "vertex_line_segments_" + std::to_string(i) + ".json";
         vector_output(filename, vertex_line_segments[i]);
     }
+    std::cout << "Done" << std::endl;
 }
