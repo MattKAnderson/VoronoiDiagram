@@ -39,13 +39,17 @@ public:
         VertexGraph::Node* data_ptr;
     };
     VertexGraph(VertexGraph::Node* graph, std::vector<VertexGraph::Node*>& refs);
+    VertexGraph(const VertexGraph& other);
+    VertexGraph(VertexGraph&& other);
     ~VertexGraph();
+    VertexGraph& operator=(const VertexGraph& other);
+    VertexGraph& operator=(VertexGraph&& other);
     VertexGraph::Node* get_head();
     std::vector<VertexGraph::Node*> get_vertices(); 
     iterator begin();
     iterator end();
 private:
-    VertexGraph::Node* data;
+    VertexGraph::Node* data = nullptr;
     std::vector<VertexGraph::Node*> refs;
 };
 
@@ -75,23 +79,17 @@ public:
         RegionGraph::Node* data_ptr;
     };
     RegionGraph(RegionGraph::Node* graph, std::vector<RegionGraph::Node*>& refs);
+    RegionGraph(const RegionGraph& other);
+    RegionGraph(RegionGraph&& other);
     ~RegionGraph();
-    /*
-    RegionGraph& operator=(RegionGraph&& other) { 
-        if (this == &other) { return *this; } 
-        data = other.data; 
-        refs = other.refs; 
-        other.data = nullptr; 
-        other.refs = {}; 
-        return *this;
-    }
-    */
+    RegionGraph& operator=(const RegionGraph& other);
+    RegionGraph& operator=(RegionGraph&& other); 
     RegionGraph::Node* get_head();
     std::vector<RegionGraph::Node*> get_regions();
     iterator begin();
     iterator end();
 private:
-    RegionGraph::Node* data;
+    RegionGraph::Node* data = nullptr;
     std::vector<RegionGraph::Node*> refs;
 };
 

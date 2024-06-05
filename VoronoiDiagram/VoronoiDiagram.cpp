@@ -2,6 +2,41 @@
 
 namespace VoronoiDiagram {
 
+VertexGraph::VertexGraph(const VertexGraph& other) {
+    refs.reserve(other.refs.size());
+    data = new VertexGraph::Node[refs.size()];
+    for (int i = 0; i < other.refs.size(); i++) {
+        size_t pos = std::distance(other.data, other.refs[i]);
+        data[pos].coord = other.refs[i]->coord;
+        data[pos].connected.reserve(other.refs[i]->connected.size());
+        for (VertexGraph::Node* adj : other.refs[i]->connected) {
+            size_t adj_pos = std::distance(other.data, adj);
+            data[pos].connected.push_back(data + adj_pos);
+        }
+    }
+}
+
+VertexGraph::VertexGraph(VertexGraph&& other) {
+    std::swap(refs, other.refs);
+    std::swap(data, other.data);
+}
+
+VertexGraph& VertexGraph::operator=(const VertexGraph& other) {
+    if (this == &other) {
+        return *this;
+    }
+    VertexGraph tmp(other);
+    std::swap(refs, tmp.refs);
+    std::swap(data, tmp.data);
+    return *this;
+}
+
+VertexGraph& VertexGraph::operator=(VertexGraph&& other) {
+    std::swap(refs, other.refs);
+    std::swap(data, other.data);
+    return *this;
+}
+
 VertexGraph::Node* VertexGraph::get_head() { 
     if (refs.size() == 0) { return nullptr; }
     else { return refs[0]; }
@@ -9,6 +44,40 @@ VertexGraph::Node* VertexGraph::get_head() {
 
 std::vector<VertexGraph::Node*> VertexGraph::get_vertices() {
     return refs;
+}
+
+RegionGraph::RegionGraph(const RegionGraph& other) {
+    refs.reserve(other.refs.size());
+    data = new RegionGraph::Node[refs.size()];
+    for (int i = 0; i < other.refs.size(); i++) {
+        size_t pos = std::distance(other.data, other.refs[i]);
+        data[pos].site = other.refs[i]->site;
+        data[pos].vertices = other.refs[i]->vertices;
+        data[pos].adjacent.reserve(other.refs[i]->adjacent.size());
+        for (RegionGraph::Node* adj : other.refs[i]->adjacent) {
+            size_t adj_pos = std::distance(other.data, adj);
+            data[pos].adjacent.push_back(data + adj_pos);
+        }
+    }
+}
+
+RegionGraph::RegionGraph(RegionGraph&& other) {
+    std::swap(data, other.data);
+    std::swap(refs, other.refs);
+}
+
+RegionGraph& RegionGraph::operator=(const RegionGraph& other) {
+    if (this == &other) { return *this; }
+    RegionGraph tmp(other);
+    std::swap(data, tmp.data);
+    std::swap(refs, tmp.refs);
+    return *this;
+}
+
+RegionGraph& RegionGraph::operator=(RegionGraph&& other) {
+    std::swap(data, other.data);
+    std::swap(refs, other.refs);
+    return *this;
 }
 
 RegionGraph::Node* RegionGraph::get_head() {
