@@ -2,7 +2,7 @@
 
 namespace VoronoiDiagram::Impl {
 
-const Event& EventManager::get(int id) {
+Event& EventManager::get(int id) {
     return events[id];
 }
 
@@ -13,6 +13,7 @@ int EventManager::create(const RealCoordinate& site) {
         events[id].sweepline = site.x;
         events[id].point = site;
         events[id].associated_arc = nullptr;
+        events[id].next = -1;
     }   
     else {
         id = events.size();
@@ -31,6 +32,7 @@ int EventManager::create(
         events[id].sweepline = sweepline;
         events[id].point = intersect;
         events[id].associated_arc = associated_arc;
+        events[id].next = -1;
     }
     else {
         id = events.size();
@@ -43,139 +45,72 @@ void EventManager::remove(int id) {
     available_stack.push_back(id);
 }
 
-void EventQueue::insert(int event_id) {
-    event_id_heap.push_back(event_id);
-    if (event_id >= id_to_location.size()) {
-        int new_size = id_to_location.size() * 2;
-        while (new_size <= event_id) { new_size *= 2; }
-        id_to_location.resize(new_size, -1);
-    }
-    id_to_location[event_id] = event_id_heap.size() - 1;
-    up_heapify(event_id_heap.size() - 1);
+void EventQueue::initialize(EventManager* manager, int psize, double start, double end) {
+    this->manager = manager;
+    int n_buckets = 4 * std::sqrt(psize);
+    bucket_start = start;
+    inv_bucket_step = n_buckets / (end - start);
+    buckets = std::vector<Event>(n_buckets);
+    last_id = n_buckets - 1;
 }
 
-void EventQueue::remove(int event_id) {
-    int heap_id = id_to_location[event_id];
-    if (heap_id == -1) { return; } 
-    event_id_heap[heap_id] = event_id_heap.back();
-    id_to_location[event_id_heap.back()] = heap_id;
-    id_to_location[event_id] = -1;
-    event_id_heap.pop_back();
-    if (compare_event_id(event_id, event_id_heap[heap_id])) {
-        up_heapify(heap_id);
+void EventQueue::insert(int id) {
+    Event& event = manager->get(id);
+    int bucket_id = compute_bucket(event.sweepline);
+    current_bucket = std::min(current_bucket, bucket_id);
+    ++_size;
+    Event* last = &buckets[bucket_id];
+    
+    if (last->next == -1) {
+        //std::cout << "Setting first id to: " << id << std::endl;
+        last->next = id;
+        return;
     }
-    else {
-        down_heapify(heap_id);
+    Event* curr = &manager->get(last->next);
+    while (curr->sweepline < event.sweepline) {
+        last = curr;
+        if (last->next == -1) {
+            break;
+        }
+        curr = &manager->get(last->next);
     }
+    event.next = last->next; 
+    last->next = id;
+}
+
+void EventQueue::remove(int id) {
+    Event& event = manager->get(id);
+    int bucket_id = compute_bucket(event.sweepline);
+    Event* last = &buckets[bucket_id];
+    while(last->next != id) {
+        last = &manager->get(last->next);
+    }
+    last->next = event.next;
+    --_size;
 }
 
 int EventQueue::consume_next() {
-    int event_id = event_id_heap[0];
-    swap(0, event_id_heap.size() - 1);
-    event_id_heap.pop_back();
-    id_to_location[event_id] = -1;
-    down_heapify(0);
-    return event_id;
+    while (buckets[current_bucket].next == -1) { ++current_bucket; }
+    int id = buckets[current_bucket].next;
+    buckets[current_bucket].next = manager->get(id).next;
+    //std::cout << "New first id is: " << buckets[current_bucket].next << std::endl;
+    --_size;
+    return id;
 }
 
 int EventQueue::size() {
-    return event_id_heap.size();
+    return _size;
 }
 
 bool EventQueue::empty() {
-    return event_id_heap.size() == 0;
+    return _size == 0;
 }
 
-int EventQueue::lchild(int id) {
-    return (id << 1) + 1;
-}
-
-int EventQueue::rchild(int id) {
-    return (id << 1) + 2;
-}
-
-int EventQueue::parent(int id) {
-    return (id - 1) >> 1;
-}
-
-void EventQueue::up_heapify(int id) {
-    int parent_id = parent(id);
-    while (id > 0 && compare(parent_id, id)) {
-        swap(parent_id, id);
-        id = parent_id;
-        parent_id = parent(id);
-    }
-}
-
-void EventQueue::down_heapify(int id) {
-    int size = event_id_heap.size();
-    int half_size = size >> 1;
-    while (id < half_size) {
-        int child_id = (id << 1) + 1;
-        int other_child_id = child_id + 1;
-        if (other_child_id < size && compare(child_id, other_child_id)) { 
-            child_id = other_child_id; 
-        }
-        if (compare(child_id, id)) {
-            break;
-        }
-        swap(child_id, id);
-        id = child_id;
-    }
-}
-
-void EventQueue::swap(int ida, int idb) {
-    int event_id_a = event_id_heap[ida];
-    int event_id_b = event_id_heap[idb];
-    id_to_location[event_id_a] = idb;
-    id_to_location[event_id_b] = ida;
-    event_id_heap[ida] = event_id_b;
-    event_id_heap[idb] = event_id_a;
- }
-
-// this might be really inefficient
-bool EventQueue::compare(int ida, int idb) {
-    int event_ida = event_id_heap[ida];
-    int event_idb = event_id_heap[idb];
-    return compare_event_id(event_ida, event_idb);
-}
-
-bool EventQueue::compare_event_id(int event_ida, int event_idb) {
-    return em->get(event_ida).sweepline > em->get(event_idb).sweepline;
-}
-
-void EventQueue::print_ordered_x() {
-    std::queue<int> index_queue;
-    index_queue.push(0);
-    while (!index_queue.empty()) {
-        int id = index_queue.front(); index_queue.pop();
-        std::cout << em->get(event_id_heap[id]).sweepline << "\n";
-        int lc_id = lchild(id);
-        int rc_id = rchild(id);
-        if (lc_id < event_id_heap.size()) { index_queue.push(lc_id); }
-        if (rc_id < event_id_heap.size()) { index_queue.push(rc_id); }
-    }
-}
-
-bool EventQueue::validate() {
-    if (event_id_heap.size() == 0) { return true; }
-    int size = event_id_heap.size();
-    std::vector<int> node_stack;
-    node_stack.push_back(0);
-    while (!node_stack.empty()) {
-        int cur_id = node_stack.back(); node_stack.pop_back();
-        int lc_id = lchild(cur_id);
-        int rc_id = rchild(cur_id);
-        if (lc_id < size) {
-            if (compare(cur_id, lc_id)) { return false; }
-            node_stack.push_back(lc_id);
-        }
-        if (rc_id < size) {
-            if (compare(cur_id, rc_id)) { return false; }
-            node_stack.push_back(rc_id);
-        }
-    }
-    return true;
+int EventQueue::compute_bucket(double sweepline) {
+    return std::max(0, std::min(
+        static_cast<int>((sweepline - bucket_start) * inv_bucket_step), 
+        last_id
+    ));
 }
 
 } // namespace VoronoiDiagram::Impl

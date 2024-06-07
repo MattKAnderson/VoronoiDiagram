@@ -9,8 +9,8 @@ struct Arc {
     Arc(const RealCoordinate& focus, Region* region): focus(focus), region(region) {};
     RealCoordinate focus;
     Region* region = nullptr;
-    bool red = true;
     int event_id = -1;
+    bool red = true;
     Arc* left = nullptr;
     Arc* right = nullptr;
     Arc* parent = nullptr;

@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <queue>
 #include <iostream>
 #include <VoronoiDiagram/Coordinate.hpp>
@@ -9,17 +10,19 @@ struct Event {
     double sweepline;
     RealCoordinate point;
     Arc* associated_arc = nullptr;
+    int next = -1;
     Event(
         double sweepline, const RealCoordinate& intersect, 
         Arc* associated_arc
     );
     Event(const RealCoordinate& site);
+    Event() {}
 };
 
 class EventManager {
 public:
     EventManager() {};
-    const Event& get(int id);
+    Event& get(int id);
     int create(const RealCoordinate& site);
     int create(
         double sweepline, const RealCoordinate& intersect, 
@@ -34,27 +37,22 @@ private:
 
 class EventQueue {
 public:
-    void set_event_manager(EventManager* em) { this->em = em; }
-    void insert(int event_id);
-    void remove(int event_id);
-    void reserve_space(int nevents);
-    void print_ordered_x();
+    EventQueue() {}
+    void initialize(EventManager* manager, int psize, double start, double end);
+    void insert(int id);
+    void remove(int id);
     int consume_next();
     int size();
     bool empty();
-    bool validate();
 private:
-    EventManager* em = nullptr;
-    std::vector<int> event_id_heap;
-    std::vector<int> id_to_location{8}; // for fast delete
-    int lchild(int id);
-    int rchild(int id);
-    int parent(int id);
-    void up_heapify(int id);
-    void down_heapify(int id);
-    void swap(int ida, int idb);
-    bool compare(int ida, int idb);
-    bool compare_event_id(int event_ida, int event_idb);
+    EventManager* manager;
+    double bucket_start;
+    double inv_bucket_step;
+    int current_bucket = 0;
+    int _size = 0;
+    int last_id;
+    std::vector<Event> buckets;
+    int compute_bucket(double sweepline);
 };
 
 inline Event::Event(const RealCoordinate& site): 

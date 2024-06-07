@@ -178,7 +178,7 @@ void BeachLine::remove_arc(Arc* arc) {
         else if (arc->parent->left == arc) { arc->parent->left = upper; }
         else { arc->parent->right = upper; }
     }
-    available_arcs.push_back(arc);
+    //available_arcs.push_back(arc);
     // TODO: delete_balance(y);
 }
 } // namespace VoronoiDiagram::Impl

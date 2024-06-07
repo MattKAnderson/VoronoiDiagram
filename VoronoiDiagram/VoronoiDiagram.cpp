@@ -119,6 +119,19 @@ void Calculator::generate(
     std::vector<RealCoordinate>& seeds
 ) {
     this->seeds = filter_duplicate_seeds(seeds);
+    bounds = {
+        std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::min(),
+        std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::min()
+    };
+    for (auto& seed : seeds) {
+        bounds.xmin = std::min(bounds.xmin, seed.x);
+        bounds.xmax = std::max(bounds.xmax, seed.x);
+        bounds.ymin = std::min(bounds.ymin, seed.y);
+        bounds.ymax = std::min(bounds.ymax, seed.y);
+    }
+    // TODO determin bounding box;
     compute();
     bound();
 }
@@ -127,12 +140,14 @@ void Calculator::generate(
     std::vector<RealCoordinate>& seeds, const Bbox& box
 ) {
     this->seeds = filter_duplicate_seeds(seeds);
+    this->bounds = box;
     compute();
     crop(box);
 }
 
 void Calculator::relax(const Bbox& bounds) {
     this->seeds = region_centroids();
+    this->bounds = bounds;
     // does full re-initialization for now. Obvious optimization is only 
     // to de-allocate and re-allocate memory that needs to be
     compute();
@@ -242,7 +257,7 @@ void Calculator::initialize() {
     beach_line.reset();
     event_manager = Impl::EventManager();
     event_queue = Impl::EventQueue();
-    event_queue.set_event_manager(&event_manager);
+    event_queue.initialize(&event_manager, nregions, bounds.xmin, bounds.xmax);
     next_half_edge_index = 0;
     next_vertex_index = 0;
     next_region_id = 0;
@@ -252,23 +267,21 @@ void Calculator::compute() {
     nregions = seeds.size();
     initialize();
 
-    int event_id;
     for (const RealCoordinate& seed : seeds) { 
-        event_id = event_manager.create(seed);
-        event_queue.insert(event_id);
+        event_queue.insert(event_manager.create(seed));
     }
-    event_id = event_queue.consume_next();
+    int event_id = event_queue.consume_next();
     const RealCoordinate& s1 = event_manager.get(event_id).point;
     beach_line.set_head(beach_line.new_arc(s1, new_region(s1)));
-    event_manager.remove(event_id);
-
+    
     while (!event_queue.empty()) {
         event_id = event_queue.consume_next();
         const Impl::Event& event = event_manager.get(event_id);
+        //std::cout << "Sweepline: " << event.sweepline << std::endl;
         if (event.associated_arc == nullptr) { 
             site_event(event.point);
         }
-        else {
+        else if (event.associated_arc) {
             intersection_event(event);
         }
         event_manager.remove(event_id);
@@ -305,11 +318,11 @@ void Calculator::site_event(RealCoordinate site) {
         );
         if (site.y < intersect.y) {
             double dist = euclidean_distance(split_arc->focus, intersect); 
-            int event_id = event_manager.create(intersect.x + dist, intersect, split_arc);
             if (split_arc->event_id != -1) {
                 event_queue.remove(split_arc->event_id);
                 event_manager.remove(split_arc->event_id);
             }
+            int event_id = event_manager.create(intersect.x + dist, intersect, split_arc);
             split_arc->event_id = event_id;
             event_queue.insert(event_id);
         }
@@ -320,11 +333,11 @@ void Calculator::site_event(RealCoordinate site) {
         );
         if (site.y > intersect.y) {
             double dist = euclidean_distance(arc->focus, intersect);
-            int event_id = event_manager.create(intersect.x + dist, intersect, arc);
             if (arc->event_id != -1) {
                 event_queue.remove(arc->event_id);
                 event_manager.remove(arc->event_id);
             }
+            int event_id = event_manager.create(intersect.x + dist, intersect, arc);
             arc->event_id = event_id;
             event_queue.insert(event_id);
         }
@@ -359,7 +372,6 @@ void Calculator::intersection_event(const Impl::Event& event) {
     l_arc->upper_edge = new_lower_half_edge;
 
     beach_line.remove_arc(arc);
-    event_queue.remove(arc->event_id);
 
     const RealCoordinate& fu = u_arc->focus;
     const RealCoordinate& fl = l_arc->focus;
@@ -375,6 +387,7 @@ void Calculator::intersection_event(const Impl::Event& event) {
                 int event_id = event_manager.create(known_at_x, new_intersect, u_arc);
                 if (u_arc->event_id != -1) {
                     event_queue.remove(u_arc->event_id);
+                    event_manager.remove(u_arc->event_id);
                 }
                 u_arc->event_id = event_id;
                 event_queue.insert(event_id);
@@ -392,9 +405,10 @@ void Calculator::intersection_event(const Impl::Event& event) {
                 int event_id = event_manager.create(known_at_x, new_intersect, l_arc);
                 if (l_arc->event_id != -1) {
                     event_queue.remove(l_arc->event_id);
+                    event_manager.remove(l_arc->event_id);
                 }
                 l_arc->event_id = event_id;
-                event_queue.insert(event_id);
+                event_queue.insert(event_id);               
             }
         }
     }
@@ -719,7 +733,7 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
             std::cout << "Avoided duplicate" << std::endl;
         }
     }
-    std::cout << "Seeds size is: " << seeds.size() << std::endl;
+    //std::cout << "Seeds size is: " << seeds.size() << std::endl;
     return seeds;
 }
 
