@@ -344,14 +344,13 @@ void Calculator::site_event(RealCoordinate site) {
             //    event_manager.remove(split_arc->event);
             //}
             if (split_arc->event_id != -1) {
-                const auto& event = event_manager.get(split_arc->event_id);
-                event_queue.remove(event.sweepline, split_arc->event_id);
+                double sweepline = event_manager.get(split_arc->event_id).sweepline;
+                event_queue.remove(sweepline, split_arc->event_id);
                 event_manager.remove(split_arc->event_id);
             }
             int event_id = event_manager.create(intersect.x + dist, intersect, split_arc);
-            const auto& event = event_manager.get(event_id);
             split_arc->event_id = event_id;
-            event_queue.insert(event.sweepline, event_id);
+            event_queue.insert(intersect.x + dist, event_id);
         }
     } 
     if (lower_lower) {
@@ -368,14 +367,13 @@ void Calculator::site_event(RealCoordinate site) {
             //arc->event = event;
             //event_queue.insert(event);
             if (arc->event_id != -1) {
-                const auto& event = event_manager.get(arc->event_id);
-                event_queue.remove(event.sweepline, arc->event_id);
+                double sweepline = event_manager.get(arc->event_id).sweepline;
+                event_queue.remove(sweepline, arc->event_id);
                 event_manager.remove(arc->event_id);
             }
             int event_id = event_manager.create(intersect.x + dist, intersect, arc);
-            const auto& event = event_manager.get(event_id);
             arc->event_id = event_id;
-            event_queue.insert(event.sweepline, event_id);
+            event_queue.insert(intersect.x + dist, event_id);
         }
     }
 }
@@ -433,9 +431,8 @@ void Calculator::intersection_event(const Impl::Event& event) {
                     event_queue.remove(event.sweepline, u_arc->event_id);
                     event_manager.remove(u_arc->event_id);
                 }
-                const auto& event = event_manager.get(event_id);
                 u_arc->event_id = event_id;
-                event_queue.insert(event.sweepline, event_id);
+                event_queue.insert(known_at_x, event_id);
             }
         }
 
@@ -460,9 +457,8 @@ void Calculator::intersection_event(const Impl::Event& event) {
                     event_queue.remove(event.sweepline, l_arc->event_id);
                     event_manager.remove(l_arc->event_id);
                 }
-                const auto& event = event_manager.get(event_id);
                 l_arc->event_id = event_id;
-                event_queue.insert(event.sweepline, event_id);               
+                event_queue.insert(known_at_x, event_id);               
             }
         }
     }
