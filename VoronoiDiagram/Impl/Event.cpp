@@ -1,19 +1,83 @@
 #include <VoronoiDiagram/Impl/Event.hpp>
+#include <iostream>
 
 namespace VoronoiDiagram::Impl {
+/*
+EventManager::~EventManager() {
+    for (Event* pool : pools) {
+        free(pool);
+    }
+    delete[] available;
+}
 
-Event& EventManager::get(int id) {
+void EventManager::initialize(int psize) {
+    for (Event* pool : pools) {
+        free(pool);
+    }
+    if (available) {
+        delete[] available;
+    }
+    pool = 0;
+    next_index = 0;
+    next_id = 0;
+    pool_size = psize * 4;
+    available_size = psize / 10;
+    next_available = -1;
+    available = new Event*[available_size];
+    pools = {static_cast<Event*>(malloc(pool_size * sizeof(Event)))};
+}
+
+void EventManager::reset() {
+    pool = 0;
+    next_id = 0;
+    next_index = 0;
+}
+
+Event* EventManager::create(const RealCoordinate& site) {
+    Event* event = get_available_ptr();
+    *event = Event(site);
+    return event;
+}
+
+Event* EventManager::create(
+    double sweepline, const RealCoordinate& intersect, Arc* associated_arc
+) {
+    Event* event = get_available_ptr();
+    *event = Event(sweepline, intersect, associated_arc);
+    return event;
+}
+
+void EventManager::remove(Event* event) {
+    next_available += next_available < (available_size - 1);
+    available[next_available] = event;
+}
+
+Event* EventManager::get_available_ptr() {
+    if (next_available >= 0) { return available[next_available--]; }
+    else if (next_index < pool_size) { return &pools[pool][next_index++]; }
+    else if (++pool < pools.size()) {  
+        next_index = 1;
+        return &pools[pool][0];
+    }
+    else {
+        pools.push_back(static_cast<Event*>(malloc(pool_size * sizeof(Event))));
+        next_index = 1;
+        return &pools[pool][0];
+    } 
+}
+*/
+
+const Event& EventIndexManager::get(int id) {
     return events[id];
 }
 
-int EventManager::create(const RealCoordinate& site) {
+int EventIndexManager::create(const RealCoordinate& site) {
     int id;
     if (available_stack.size()) {
         id = available_stack.back(); available_stack.pop_back();
         events[id].sweepline = site.x;
         events[id].point = site;
         events[id].associated_arc = nullptr;
-        events[id].next = -1;
     }   
     else {
         id = events.size();
@@ -22,7 +86,7 @@ int EventManager::create(const RealCoordinate& site) {
     return id;
 }
 
-int EventManager::create(
+int EventIndexManager::create(
     double sweepline, const RealCoordinate& intersect, 
     Arc* associated_arc
 ) {
@@ -32,7 +96,6 @@ int EventManager::create(
         events[id].sweepline = sweepline;
         events[id].point = intersect;
         events[id].associated_arc = associated_arc;
-        events[id].next = -1;
     }
     else {
         id = events.size();
@@ -41,61 +104,100 @@ int EventManager::create(
     return id;
 }
 
-void EventManager::remove(int id) {
-    available_stack.push_back(id);
+void EventIndexManager::remove(int id) {
+    if (available_stack.size() < max_stack_size) {
+        available_stack.push_back(id);
+    }
 }
 
-void EventQueue::initialize(EventManager* manager, int psize, double start, double end) {
-    this->manager = manager;
-    int n_buckets = 4 * std::sqrt(psize);
+void EventHashVectorQueue::initialize(int psize, double start, double end) {
+    int n_buckets = psize / 4.0;
+    double delta = (end - start);
+    bucket_start = start;// - 0.25 * delta;
+    inv_bucket_step = n_buckets / (end - start);
+    buckets = std::vector<std::vector<EventReference>>(n_buckets);
+    for (auto& bucket : buckets) {
+        bucket.reserve(16);
+    }
+    last_id = n_buckets - 1;
+}
+
+void EventHashVectorQueue::insert(double sweepline, int id) {
+    int bucket_index = compute_bucket(sweepline);
+    current_bucket = std::min(current_bucket, bucket_index);
+    ++_size;
+    auto r_it = buckets[bucket_index].rbegin();
+    auto r_end = buckets[bucket_index].rend();
+    for (; r_it != r_end && sweepline > r_it->sweepline; ++r_it) { }
+    buckets[bucket_index].emplace(r_it.base(), sweepline, id);
+}
+
+void EventHashVectorQueue::remove(double sweepline, int id) {
+    int bucket_index = compute_bucket(sweepline);
+    auto it = buckets[bucket_index].begin();
+    auto end = buckets[bucket_index].end();
+    for (; it != end && id != it->event_id; it++) { }
+    buckets[bucket_index].erase(it); // guaranteed to be called on existing item
+    --_size; 
+}
+
+int EventHashVectorQueue::consume_next() {
+    --_size;
+    while (buckets[current_bucket].size() == 0) { ++current_bucket; }
+    int event_id = buckets[current_bucket].back().event_id;
+    buckets[current_bucket].pop_back();
+    return event_id;
+}
+
+int EventHashVectorQueue::size() {
+    return _size;
+}
+
+bool EventHashVectorQueue::empty() {
+    return _size == 0;
+}
+/*
+void EventQueue::initialize(int psize, double start, double end) {
+    int n_buckets = psize / 4.0;
     bucket_start = start;
     inv_bucket_step = n_buckets / (end - start);
     buckets = std::vector<Event>(n_buckets);
     last_id = n_buckets - 1;
 }
 
-void EventQueue::insert(int id) {
-    Event& event = manager->get(id);
-    int bucket_id = compute_bucket(event.sweepline);
+void EventQueue::insert(Event* event) {
+    int bucket_id = compute_bucket(event->sweepline);
     current_bucket = std::min(current_bucket, bucket_id);
     ++_size;
     Event* last = &buckets[bucket_id];
-    
-    if (last->next == -1) {
-        //std::cout << "Setting first id to: " << id << std::endl;
-        last->next = id;
-        return;
+    while (last->next != nullptr && last->next->sweepline < event->sweepline) {
+        last = last->next;
     }
-    Event* curr = &manager->get(last->next);
-    while (curr->sweepline < event.sweepline) {
-        last = curr;
-        if (last->next == -1) {
-            break;
-        }
-        curr = &manager->get(last->next);
+    if (last->next) {
+        last->next->prev = event;
     }
-    event.next = last->next; 
-    last->next = id;
+    event->next = last->next;
+    event->prev = last;
+    last->next = event;
 }
 
-void EventQueue::remove(int id) {
-    Event& event = manager->get(id);
-    int bucket_id = compute_bucket(event.sweepline);
-    Event* last = &buckets[bucket_id];
-    while(last->next != id) {
-        last = &manager->get(last->next);
+void EventQueue::remove(Event* event) {
+    if (event->next) {
+        event->next->prev = event->prev;
     }
-    last->next = event.next;
+    event->prev->next = event->next;
     --_size;
 }
 
-int EventQueue::consume_next() {
-    while (buckets[current_bucket].next == -1) { ++current_bucket; }
-    int id = buckets[current_bucket].next;
-    buckets[current_bucket].next = manager->get(id).next;
-    //std::cout << "New first id is: " << buckets[current_bucket].next << std::endl;
+Event* EventQueue::consume_next() {
     --_size;
-    return id;
+    while (buckets[current_bucket].next == nullptr) { ++current_bucket; }
+    Event* event = buckets[current_bucket].next;
+    if (event->next) {
+        event->next->prev = event->prev;        
+    }
+    buckets[current_bucket].next = event->next;
+    return event;
 }
 
 int EventQueue::size() {
@@ -112,5 +214,5 @@ int EventQueue::compute_bucket(double sweepline) {
         last_id
     ));
 }
-
+*/
 } // namespace VoronoiDiagram::Impl

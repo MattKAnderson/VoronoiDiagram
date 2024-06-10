@@ -113,8 +113,10 @@ private:
     std::mt19937_64 rng;
     //std::vector<std::vector<int>> diagram;
     std::vector<RealCoordinate> seeds;
-    Impl::EventManager event_manager;
-    Impl::EventQueue event_queue;
+    //Impl::EventManager event_manager;
+    //Impl::EventQueue event_queue;
+    Impl::EventIndexManager event_manager;
+    Impl::EventHashVectorQueue event_queue;
     Impl::BeachLine beach_line;
     //Impl::Dcel dcel;
     std::vector<Impl::Region*> regions;
