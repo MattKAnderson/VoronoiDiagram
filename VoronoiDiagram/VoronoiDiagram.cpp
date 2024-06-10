@@ -301,7 +301,7 @@ void Calculator::compute() {
         if (event.associated_arc == nullptr) { 
             site_event(event.point);
         }
-        else if (event.associated_arc) {
+        else {
             intersection_event(event);
         }
         event_manager.remove(event_id);
