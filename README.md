@@ -137,6 +137,9 @@ The time to generate and clip the voronoi diagram for specified number of pre-ge
 </p>
 
 ## Operation times
+
+TODO: update this sub-section
+
 The following table summarizes the avg. time over 20 runs in milliseconds (ms) to complete 4 core operations for different problem sizes
 
 | Operation | 100 sites | 1000 sites | 10,000 sites | 100,000 sites |
