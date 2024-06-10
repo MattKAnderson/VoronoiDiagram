@@ -258,8 +258,8 @@ void Calculator::initialize() {
     vertices = {};
     vertices.reserve(3 * nregions - 6);
     beach_line.reset();
-    event_manager = Impl::EventIndexManager(nregions);
-    event_queue = Impl::EventHashVectorQueue();
+    event_manager = Impl::EventManager(nregions);
+    event_queue = Impl::EventQueue();
     event_queue.initialize(nregions, bounds.xmin, bounds.xmax);
     //event_manager.initialize(nregions);
     //event_queue = Impl::EventQueue();
@@ -272,13 +272,6 @@ void Calculator::compute() {
     nregions = seeds.size();
     initialize();
 
-    // makes the insertion into event queue more efficient
-    //std::sort(
-    //    seeds.begin(), seeds.end(),
-    //    [](const RealCoordinate& a, const RealCoordinate& b) { 
-    //        return a.x > b.x;
-    //    }    
-    //);
     int event_id;
     for (const RealCoordinate& seed : seeds) { 
         event_id = event_manager.create(seed);
@@ -783,7 +776,6 @@ std::vector<RealCoordinate> Calculator::generate_seeds(
             std::cout << "Avoided duplicate" << std::endl;
         }
     }
-    //std::cout << "Seeds size is: " << seeds.size() << std::endl;
     return seeds;
 }
 
