@@ -93,10 +93,10 @@ private:
 };
 
 inline int EventHashVectorQueue::compute_bucket(double sweepline) {
-    return std::max(0, std::min(
-        static_cast<int>((sweepline - bucket_start) * inv_bucket_step), 
-        last_id
-    ));
+    return std::max(0, static_cast<int>(std::min(
+        (sweepline - bucket_start) * inv_bucket_step, 
+        static_cast<double>(last_id)
+    )));
 }
 /*
 class EventQueue {
