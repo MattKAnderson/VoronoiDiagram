@@ -109,6 +109,7 @@ public:
 
 private:
     int nregions;
+    Bbox bounds;
     std::mt19937_64 rng;
     //std::vector<std::vector<int>> diagram;
     std::vector<RealCoordinate> seeds;

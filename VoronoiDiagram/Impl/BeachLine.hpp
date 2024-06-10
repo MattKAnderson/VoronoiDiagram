@@ -4,13 +4,16 @@
 #include <VoronoiDiagram/Impl/Dcel.hpp>
 
 namespace VoronoiDiagram::Impl {
+struct Event;
+
 struct Arc {
     Arc() {}
     Arc(const RealCoordinate& focus, Region* region): focus(focus), region(region) {};
     RealCoordinate focus;
     Region* region = nullptr;
-    bool red = true;
     int event_id = -1;
+    //Event* event = nullptr;
+    bool red = true;
     Arc* left = nullptr;
     Arc* right = nullptr;
     Arc* parent = nullptr;
@@ -72,7 +75,6 @@ inline Arc* BeachLine::new_arc(const RealCoordinate& focus, Region* region) {
     Arc* arc = nullptr;
     if (!available_arcs.empty()) {
         arc = available_arcs.back(); available_arcs.pop_back();
-        *arc = Arc(focus, region);
     }
     else {
         if (next_arc_index < POOL_ALLOC_SIZE) { 
@@ -86,8 +88,8 @@ inline Arc* BeachLine::new_arc(const RealCoordinate& focus, Region* region) {
             next_arc_index = 1;
             arc = &arc_pools[pool_index][0];
         }
-        *arc = Arc(focus, region);
     }
+    *arc = Arc(focus, region);
     return arc;
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <queue>
 #include <iostream>
 #include <VoronoiDiagram/Coordinate.hpp>
@@ -14,11 +15,17 @@ struct Event {
         Arc* associated_arc
     );
     Event(const RealCoordinate& site);
+    Event() {}
 };
 
 class EventManager {
 public:
-    EventManager() {};
+    EventManager() {}
+    EventManager(int psize) { 
+        events.reserve(2 * psize); 
+        max_stack_size = std::min(1024, psize);
+        available_stack.reserve(max_stack_size);
+    };
     const Event& get(int id);
     int create(const RealCoordinate& site);
     int create(
@@ -28,33 +35,34 @@ public:
     void remove(int id);
 
 private:
+    int max_stack_size;
     std::vector<Event> events;
-    std::vector<int> available_stack;
+    std::vector<int> available_stack;    
 };
 
 class EventQueue {
 public:
-    void set_event_manager(EventManager* em) { this->em = em; }
-    void insert(int event_id);
-    void remove(int event_id);
-    void reserve_space(int nevents);
-    void print_ordered_x();
+    struct EventReference {
+        double sweepline;
+        int event_id;
+        EventReference(double sweepline, int event_id): 
+            sweepline(sweepline), event_id(event_id) {}
+    };
+    EventQueue() {}
+    void initialize(int psize, double start, double end);
+    void insert(double sweepline, int id);
+    void remove(double sweepline, int id);
     int consume_next();
     int size();
     bool empty();
-    bool validate();
 private:
-    EventManager* em = nullptr;
-    std::vector<int> event_id_heap;
-    std::vector<int> id_to_location{8}; // for fast delete
-    int lchild(int id);
-    int rchild(int id);
-    int parent(int id);
-    void up_heapify(int id);
-    void down_heapify(int id);
-    void swap(int ida, int idb);
-    bool compare(int ida, int idb);
-    bool compare_event_id(int event_ida, int event_idb);
+    double bucket_start;
+    double inv_bucket_step;
+    int current_bucket = 0;
+    int _size = 0;
+    int last_id;
+    std::vector<std::vector<EventReference>> buckets;
+    int compute_bucket(double sweepline);
 };
 
 inline Event::Event(const RealCoordinate& site): 
@@ -64,5 +72,12 @@ inline Event::Event(
     double sweepline, const RealCoordinate& intersect,
     Arc* associated_arc
 ): sweepline(sweepline), point(intersect), associated_arc(associated_arc) {}
+
+inline int EventQueue::compute_bucket(double sweepline) {
+    return std::max(0, static_cast<int>(std::min(
+        (sweepline - bucket_start) * inv_bucket_step, 
+        static_cast<double>(last_id)
+    )));
+}
 
 } // namespace VoronoiDiagram::Impl
